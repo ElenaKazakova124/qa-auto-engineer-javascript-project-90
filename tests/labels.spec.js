@@ -3,7 +3,7 @@ const LoginPage = require('../pages/LoginPage.js')
 const DashboardPage = require('./pages/DashboardPage.js')
 const LabelsPage = require('./pages/LabelsPage.js')
 
-test.describe('Тестирование меток по требованиям', () => {
+test.describe('Тестирование меток', () => {
   let loginPage, dashboardPage, labelsPage
 
   test.beforeEach(async ({ page }) => {
