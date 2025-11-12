@@ -1,6 +1,6 @@
 const mainPageElements = {
     themeButtonLabel: 'Toggle theme',
-    profileButtonLabel: 'Profile', 
+    profileButtonLabel: 'Profile',
     logoutButtonLabel: 'Logout',
     welcomeText: 'Welcome',
     usersMenuItemLabel: 'Users',
@@ -24,18 +24,18 @@ const mainPageElements = {
     searchInput: 'Search...'
   }
   
-  const expectedData = {
+  const existingData = {
     statuses: ['Draft', 'To Review', 'To Be Fixed', 'To Publish', 'Published'],
     labels: ['bug', 'feature', 'enhancement', 'task', 'critical'],
     users: [
-      { email: 'john@google.com', firstName: 'John', lastName: 'Doe' },
-      { email: 'jack@yahoo.com', firstName: 'Jack', lastName: 'Jens' },
-      { email: 'jane@gmail.com', firstName: 'Jane', lastName: 'Smith' },
-      { email: 'alice@hotmail.com', firstName: 'Alice', lastName: 'Johnson' },
-      { email: 'peter@outlook.com', firstName: 'Peter', lastName: 'Brown' },
-      { email: 'sarah@example.com', firstName: 'Sarah', lastName: 'Wilson' },
-      { email: 'michael@example.com', firstName: 'Michael', lastName: 'Davis' },
-      { email: 'emily@example.com', firstName: 'Emily', lastName: 'Martinez' }
+      'john@google.com',
+      'jack@yahoo.com', 
+      'jane@gmail.com',
+      'alice@hotmail.com',
+      'peter@outlook.com',
+      'sarah@example.com',
+      'michael@example.com',
+      'emily@example.com'
     ]
   }
   
@@ -46,7 +46,7 @@ const mainPageElements = {
       lastName: 'User'
     },
     updatedUser: {
-      email: 'updateduser@example.com', 
+      email: 'updateduser@example.com',
       firstName: 'Updated',
       lastName: 'User'
     },
@@ -57,10 +57,22 @@ const mainPageElements = {
     }
   }
   
+  const testStatuses = {
+    newStatus: {
+      name: 'Test Status',
+      slug: 'test-status'
+    },
+    updatedStatus: {
+      name: 'Updated Status',
+      slug: 'updated-status'
+    }
+  }
+  
   module.exports = {
     mainPageElements,
     authElements,
     tableElements,
-    expectedData,
-    testUsers
+    existingData,
+    testUsers,
+    testStatuses
   }

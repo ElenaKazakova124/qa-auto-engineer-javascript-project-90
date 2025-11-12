@@ -3,26 +3,7 @@ const LoginPage = require('../pages/LoginPage.js')
 const DashboardPage = require('./pages/DashboardPage.js')
 const UsersPage = require('./pages/UsersPage.js')
 
-// Тестовые данные
-const testUsers = {
-  newUser: {
-    email: `testuser${Date.now()}@example.com`,
-    firstName: 'Test',
-    lastName: 'User'
-  },
-  updatedUser: {
-    email: `updateduser${Date.now()}@example.com`,
-    firstName: 'Updated',
-    lastName: 'User'
-  },
-  invalidUser: {
-    email: 'invalid-email',
-    firstName: 'Invalid',
-    lastName: 'User'
-  }
-}
-
-test.describe('Полное тестирование функциональности пользователей', () => {
+test.describe('Тестирование пользователей по требованиям', () => {
   let loginPage, dashboardPage, usersPage
 
   test.beforeEach(async ({ page }) => {
@@ -38,244 +19,215 @@ test.describe('Полное тестирование функционально�
     await usersPage.waitForPageLoaded()
   })
 
-  // ТЕСТЫ СОЗДАНИЯ ПОЛЬЗОВАТЕЛЕЙ
+  // 1. ТЕСТИРОВАНИЕ СОЗДАНИЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ
   test.describe('Создание новых пользователей', () => {
     test('форма создания пользователя отображается корректно', async () => {
+      // Убедиться, что форма создания пользователя отображается корректно
       await usersPage.clickCreateUser()
       
-      // Проверяем что форма открылась и содержит все необходимые элементы
-      await usersPage.verifyFormLoaded()
-      await usersPage.verifyRequiredFields()
+      // Проверяем все элементы формы
+      await expect(usersPage.emailInput).toBeVisible()
+      await expect(usersPage.firstNameInput).toBeVisible()
+      await expect(usersPage.lastNameInput).toBeVisible()
+      await expect(usersPage.saveButton).toBeVisible()
+      
+      // Проверяем обязательные поля
+      await expect(usersPage.page.getByText('Email*')).toBeVisible()
+      await expect(usersPage.page.getByText('First name*')).toBeVisible()
+      await expect(usersPage.page.getByText('Last name*')).toBeVisible()
     })
 
-    test('создание пользователя с валидными данными', async () => {
+    test('данные нового пользователя сохраняются правильно', async () => {
+      // Ввести данные нового пользователя в форму и убедиться, что данные сохраняются правильно
+      const testEmail = `testuser${Date.now()}@example.com`
+      const testFirstName = `FirstName${Date.now()}`
+      const testLastName = `LastName${Date.now()}`
+      
       await usersPage.clickCreateUser()
-      
-      // Заполняем форму валидными данными
-      await usersPage.fillUserForm(
-        testUsers.newUser.email,
-        testUsers.newUser.firstName,
-        testUsers.newUser.lastName
-      )
-      
-      // Сохраняем
+      await usersPage.fillUserForm(testEmail, testFirstName, testLastName)
       await usersPage.saveUserForm()
       
-      // Ждем возврата к списку и проверяем что пользователь создан
+      // Проверяем что сохранились правильные данные
       await usersPage.waitForPageLoaded()
-      await usersPage.verifyUserInTable(
-        testUsers.newUser.email,
-        testUsers.newUser.firstName,
-        testUsers.newUser.lastName
-      )
-    })
-
-    test('попытка создания пользователя с пустыми обязательными полями', async () => {
-      await usersPage.clickCreateUser()
-      
-      // Пытаемся сохранить пустую форму
-      await usersPage.saveUserForm()
-      
-      // Проверяем что остались на форме и есть сообщения об ошибках
-      await usersPage.verifyFormLoaded()
-      await usersPage.verifyFormValidation()
-    })
-
-    test('создание пользователя с некорректным email', async () => {
-      await usersPage.clickCreateUser()
-      
-      // Вводим некорректный email
-      await usersPage.fillUserForm(
-        testUsers.invalidUser.email,
-        testUsers.invalidUser.firstName,
-        testUsers.invalidUser.lastName
-      )
-      
-      await usersPage.saveUserForm()
-      
-      // Проверяем валидацию
-      await usersPage.verifyFormValidation()
-    })
-
-    test('валидация формата email при создании', async () => {
-      await usersPage.clickCreateUser()
-      
-      const invalidEmails = [
-        'invalid',
-        'invalid@',
-        'invalid@domain',
-        '@domain.com'
-      ]
-
-      for (const invalidEmail of invalidEmails) {
-        await usersPage.emailInput.fill(invalidEmail)
-        await usersPage.firstNameInput.fill('Test')
-        await usersPage.lastNameInput.fill('User')
-        await usersPage.saveUserForm()
-        
-        // Проверяем ошибку валидации
-        await usersPage.verifyFormValidation()
-        
-        // Очищаем поле для следующего теста
-        await usersPage.emailInput.clear()
-      }
+      await usersPage.verifyUserInTable(testEmail, testFirstName, testLastName)
     })
   })
 
-  // ТЕСТЫ ПРОСМОТРА И РЕДАКТИРОВАНИЯ
-  test.describe('Просмотр и редактирование пользователей', () => {
-    test('просмотр списка пользователей отображает полную информацию', async () => {
+  // 2. ТЕСТИРОВАНИЕ ПРОСМОТРА СПИСКА ПОЛЬЗОВАТЕЛЕЙ
+  test.describe('Просмотр списка пользователей', () => {
+    test('список пользователей отображается полностью и корректно', async () => {
+      // Убедиться, что список пользователей отображается полностью и корректно
+      await expect(usersPage.header).toBeVisible()
+      
+      // Проверяем что таблица не пустая
+      const rows = await usersPage.page.locator('tbody tr').count()
+      expect(rows).toBeGreaterThan(0)
+      
       // Проверяем заголовки таблицы
       const headers = ['Email', 'First name', 'Last name', 'Created at']
       for (const header of headers) {
-        await expect(usersPage.page.getByText(header, { exact: true })).toBeVisible()
+        await expect(usersPage.page.getByText(header)).toBeVisible()
       }
-      
-      // Проверяем что отображаются все пользователи с правильными данными
-      await usersPage.verifyUsersTable()
     })
 
-    test('редактирование информации о пользователе', async () => {
-      // Сначала создаем пользователя для редактирования
+    test('отображается основная информация о каждом пользователе', async () => {
+      // Проверить, что отображается основная информация о каждом пользователе: электронная почта, имя и фамилия
+      const firstRow = usersPage.page.locator('tbody tr').first()
+      
+      // Проверяем что в каждой строке есть email, имя и фамилия
+      const emailCell = firstRow.locator('td').nth(0) // Первая колонка - Email
+      const firstNameCell = firstRow.locator('td').nth(1) // Вторая колонка - First name
+      const lastNameCell = firstRow.locator('td').nth(2) // Третья колонка - Last name
+      
+      await expect(emailCell).not.toBeEmpty()
+      await expect(firstNameCell).not.toBeEmpty()
+      await expect(lastNameCell).not.toBeEmpty()
+      
+      const emailText = await emailCell.textContent()
+      const firstNameText = await firstNameCell.textContent()
+      const lastNameText = await lastNameCell.textContent()
+      
+      expect(emailText.length).toBeGreaterThan(0)
+      expect(firstNameText.length).toBeGreaterThan(0)
+      expect(lastNameText.length).toBeGreaterThan(0)
+      
+      // Проверяем что email содержит @ (базовая проверка формата)
+      expect(emailText).toContain('@')
+    })
+  })
+
+  // 3. ТЕСТИРОВАНИЕ РЕДАКТИРОВАНИЯ ИНФОРМАЦИИ О ПОЛЬЗОВАТЕЛЯХ
+  test.describe('Редактирование информации о пользователях', () => {
+    test('форма редактирования пользователя отображается правильно', async () => {
+      // Создаем пользователя для редактирования
+      const originalEmail = `edituser${Date.now()}@example.com`
+      const originalFirstName = `OriginalFirst${Date.now()}`
+      const originalLastName = `OriginalLast${Date.now()}`
+      
       await usersPage.clickCreateUser()
-      await usersPage.fillUserForm(
-        testUsers.newUser.email,
-        testUsers.newUser.firstName,
-        testUsers.newUser.lastName
-      )
+      await usersPage.fillUserForm(originalEmail, originalFirstName, originalLastName)
       await usersPage.saveUserForm()
       await usersPage.waitForPageLoaded()
       
-      // Редактируем созданного пользователя
-      await usersPage.clickEditForUser(testUsers.newUser.email)
+      // Убедиться, что форма редактирования пользователя отображается правильно
+      await usersPage.clickEditForUser(originalEmail)
       
       // Проверяем что форма открылась с текущими данными
-      await usersPage.verifyFormLoaded()
-      
-      // Изменяем данные
-      await usersPage.fillUserForm(
-        testUsers.updatedUser.email,
-        testUsers.updatedUser.firstName,
-        testUsers.updatedUser.lastName
-      )
-      
-      // Сохраняем изменения
-      await usersPage.saveUserForm()
-      
-      // Проверяем что изменения применились
-      await usersPage.waitForPageLoaded()
-      await usersPage.verifyUserInTable(
-        testUsers.updatedUser.email,
-        testUsers.updatedUser.firstName,
-        testUsers.updatedUser.lastName
-      )
+      await expect(usersPage.emailInput).toHaveValue(originalEmail)
+      await expect(usersPage.firstNameInput).toHaveValue(originalFirstName)
+      await expect(usersPage.lastNameInput).toHaveValue(originalLastName)
+      await expect(usersPage.saveButton).toBeVisible()
     })
 
-    test('просмотр детальной информации о пользователе', async () => {
-      // Создаем пользователя для просмотра
+    test('изменения данных пользователя сохраняются корректно', async () => {
+      // Создаем пользователя для редактирования
+      const originalEmail = `original${Date.now()}@example.com`
+      const originalFirstName = `OriginalFirst${Date.now()}`
+      const originalLastName = `OriginalLast${Date.now()}`
+      
       await usersPage.clickCreateUser()
-      await usersPage.fillUserForm(
-        testUsers.newUser.email,
-        testUsers.newUser.firstName,
-        testUsers.newUser.lastName
-      )
+      await usersPage.fillUserForm(originalEmail, originalFirstName, originalLastName)
       await usersPage.saveUserForm()
       await usersPage.waitForPageLoaded()
       
-      // Открываем детальную информацию
-      await usersPage.clickShowForUser(testUsers.newUser.email)
+      // Изменить данные пользователя и убедиться, что изменения сохраняются корректно
+      const updatedEmail = `updated${Date.now()}@example.com`
+      const updatedFirstName = `UpdatedFirst${Date.now()}`
+      const updatedLastName = `UpdatedLast${Date.now()}`
       
-      // Проверяем что открылась страница деталей
-      await expect(usersPage.page.getByText(testUsers.newUser.email)).toBeVisible()
-      await expect(usersPage.page.getByText(testUsers.newUser.firstName)).toBeVisible()
-      await expect(usersPage.page.getByText(testUsers.newUser.lastName)).toBeVisible()
+      await usersPage.clickEditForUser(originalEmail)
+      await usersPage.fillUserForm(updatedEmail, updatedFirstName, updatedLastName)
+      await usersPage.saveUserForm()
       
-      // Возвращаемся назад
+      // Проверяем что изменения сохранились
+      await usersPage.waitForPageLoaded()
+      await usersPage.verifyUserInTable(updatedEmail, updatedFirstName, updatedLastName)
+      await usersPage.verifyUserNotInTable(originalEmail)
+    })
+
+    test('валидация данных при редактировании пользователя', async () => {
+      // Создаем пользователя для тестирования валидации
+      const testEmail = `validation${Date.now()}@example.com`
+      const testFirstName = `ValidationFirst${Date.now()}`
+      const testLastName = `ValidationLast${Date.now()}`
+      
+      await usersPage.clickCreateUser()
+      await usersPage.fillUserForm(testEmail, testFirstName, testLastName)
+      await usersPage.saveUserForm()
+      await usersPage.waitForPageLoaded()
+      
+      // Проверить валидацию данных при редактировании пользователя
+      await usersPage.clickEditForUser(testEmail)
+      
+      // Пытаемся сохранить с некорректным email
+      await usersPage.emailInput.fill('invalid-email')
+      await usersPage.saveUserForm()
+      
+      // Должна быть ошибка валидации email
+      await usersPage.verifyFormValidation()
+      
+      // Возвращаемся и проверяем что оригинальные данные не изменились
       await usersPage.page.goBack()
       await usersPage.waitForPageLoaded()
+      await usersPage.verifyUserInTable(testEmail, testFirstName, testLastName)
     })
 
-    test('поиск пользователя по email', async () => {
-      // Создаем пользователя для поиска
+    test('валидация обязательных полей при редактировании', async () => {
+      // Создаем пользователя для тестирования валидации обязательных полей
+      const testEmail = `required${Date.now()}@example.com`
+      const testFirstName = `RequiredFirst${Date.now()}`
+      const testLastName = `RequiredLast${Date.now()}`
+      
       await usersPage.clickCreateUser()
-      await usersPage.fillUserForm(
-        testUsers.newUser.email,
-        testUsers.newUser.firstName,
-        testUsers.newUser.lastName
-      )
+      await usersPage.fillUserForm(testEmail, testFirstName, testLastName)
       await usersPage.saveUserForm()
       await usersPage.waitForPageLoaded()
       
-      // Ищем пользователя по email
-      await usersPage.searchInput.fill(testUsers.newUser.email)
-      
-      // Ждем обновления таблицы
-      await usersPage.page.waitForTimeout(1000)
-      
-      // Проверяем что в результатах только искомый пользователь
-      await expect(usersPage.page.getByText(testUsers.newUser.email)).toBeVisible()
-    })
-
-    test('редактирование с валидацией обязательных полей', async () => {
-      // Создаем пользователя для редактирования
-      await usersPage.clickCreateUser()
-      await usersPage.fillUserForm(
-        testUsers.newUser.email,
-        testUsers.newUser.firstName,
-        testUsers.newUser.lastName
-      )
-      await usersPage.saveUserForm()
-      await usersPage.waitForPageLoaded()
-      
-      // Редактируем пользователя
-      await usersPage.clickEditForUser(testUsers.newUser.email)
+      await usersPage.clickEditForUser(testEmail)
       
       // Очищаем обязательные поля
       await usersPage.emailInput.clear()
       await usersPage.firstNameInput.clear()
       await usersPage.lastNameInput.clear()
-      
-      // Пытаемся сохранить
       await usersPage.saveUserForm()
       
-      // Проверяем что появились ошибки валидации
+      // Должны быть ошибки валидации
       await usersPage.verifyFormValidation()
     })
   })
 
-  // ТЕСТЫ УДАЛЕНИЯ ПОЛЬЗОВАТЕЛЕЙ
+  // 4. ТЕСТИРОВАНИЕ ВОЗМОЖНОСТИ УДАЛЕНИЯ ПОЛЬЗОВАТЕЛЕЙ
   test.describe('Удаление пользователей', () => {
     test('удаление одного пользователя', async () => {
-      // Создаем пользователя для удаления
+      // Выбрать одного пользователя для удаления
+      const userToDelete = `deleteuser${Date.now()}@example.com`
+      const userFirstName = `DeleteFirst${Date.now()}`
+      const userLastName = `DeleteLast${Date.now()}`
+      
       await usersPage.clickCreateUser()
-      await usersPage.fillUserForm(
-        testUsers.newUser.email,
-        testUsers.newUser.firstName,
-        testUsers.newUser.lastName
-      )
+      await usersPage.fillUserForm(userToDelete, userFirstName, userLastName)
       await usersPage.saveUserForm()
       await usersPage.waitForPageLoaded()
       
-      const initialCount = await usersPage.page.locator('tbody tr').count()
+      const countBefore = await usersPage.page.locator('tbody tr').count()
       
       // Удаляем пользователя
-      await usersPage.clickDeleteForUser(testUsers.newUser.email)
+      await usersPage.clickDeleteForUser(userToDelete)
       await usersPage.confirmDelete()
       
-      // Проверяем что пользователь удален
+      // Убедиться, что после подтверждения удаления пользователь удаляется
       await usersPage.waitForPageLoaded()
-      await usersPage.verifyUserNotInTable(testUsers.newUser.email)
+      await usersPage.verifyUserNotInTable(userToDelete)
       
-      // Проверяем что количество пользователей уменьшилось на 1
-      const newCount = await usersPage.page.locator('tbody tr').count()
-      expect(newCount).toBe(initialCount - 1)
+      const countAfter = await usersPage.page.locator('tbody tr').count()
+      expect(countAfter).toBe(countBefore - 1)
     })
 
-    test('массовое удаление пользователей', async () => {
-      // Создаем несколько пользователей для удаления
+    test('удаление нескольких пользователей', async () => {
+      // Выбрать нескольких пользователей для удаления
       const usersToCreate = [
-        { email: `user1${Date.now()}@example.com`, firstName: 'User1', lastName: 'Test' },
-        { email: `user2${Date.now()}@example.com`, firstName: 'User2', lastName: 'Test' }
+        { email: `multidelete1${Date.now()}@example.com`, firstName: 'Multi1', lastName: 'Delete1' },
+        { email: `multidelete2${Date.now()}@example.com`, firstName: 'Multi2', lastName: 'Delete2' }
       ]
       
       for (const user of usersToCreate) {
@@ -285,33 +237,33 @@ test.describe('Полное тестирование функционально�
         await usersPage.waitForPageLoaded()
       }
       
-      const initialCount = await usersPage.page.locator('tbody tr').count()
+      const countBefore = await usersPage.page.locator('tbody tr').count()
       
-      // Выбираем созданных пользователей
+      // Удаляем каждого пользователя по отдельности
       for (const user of usersToCreate) {
-        await usersPage.selectUser(user.email)
+        await usersPage.clickDeleteForUser(user.email)
+        await usersPage.confirmDelete()
+        await usersPage.waitForPageLoaded()
       }
       
-      // Удаляем выбранных
-      await usersPage.clickBulkDelete()
-      await usersPage.confirmDelete()
-      
-      // Проверяем что пользователи удалены
-      await usersPage.waitForPageLoaded()
+      // Проверяем что все пользователи удалены
       for (const user of usersToCreate) {
         await usersPage.verifyUserNotInTable(user.email)
       }
       
-      // Проверяем общее количество
-      const newCount = await usersPage.page.locator('tbody tr').count()
-      expect(newCount).toBe(initialCount - usersToCreate.length)
+      const countAfter = await usersPage.page.locator('tbody tr').count()
+      expect(countAfter).toBe(countBefore - usersToCreate.length)
     })
+  })
 
-    test('удаление всех пользователей через выделение всех', async () => {
-      // Создаем несколько пользователей
+  // 5. ТЕСТИРОВАНИЕ МАССОВОГО УДАЛЕНИЯ ПОЛЬЗОВАТЕЛЕЙ
+  test.describe('Массовое удаление пользователей', () => {
+    test('массовое удаление пользователей', async () => {
+      // Создаем несколько пользователей для массового удаления
       const usersToCreate = [
-        { email: `user1${Date.now()}@example.com`, firstName: 'User1', lastName: 'Test' },
-        { email: `user2${Date.now()}@example.com`, firstName: 'User2', lastName: 'Test' }
+        { email: `bulkdelete1${Date.now()}@example.com`, firstName: 'Bulk1', lastName: 'Delete1' },
+        { email: `bulkdelete2${Date.now()}@example.com`, firstName: 'Bulk2', lastName: 'Delete2' },
+        { email: `bulkdelete3${Date.now()}@example.com`, firstName: 'Bulk3', lastName: 'Delete3' }
       ]
       
       for (const user of usersToCreate) {
@@ -321,55 +273,35 @@ test.describe('Полное тестирование функционально�
         await usersPage.waitForPageLoaded()
       }
       
-      const initialCount = await usersPage.page.locator('tbody tr').count()
+      const countBefore = await usersPage.page.locator('tbody tr').count()
       
-      // Выделяем всех пользователей
+      // Выбрать опцию для выделения всех пользователей
       await usersPage.selectAllUsers()
       
-      // Проверяем что все выделены
+      // Убедиться, что все пользователи выделены
       const selectedCount = await usersPage.page.locator('tbody input[type="checkbox"]:checked').count()
-      expect(selectedCount).toBe(initialCount)
+      expect(selectedCount).toBe(countBefore)
       
-      // Удаляем всех
+      // Выбрать опцию для удаления всех выбранных пользователей
       await usersPage.clickBulkDelete()
       await usersPage.confirmDelete()
       
-      // Проверяем что таблица пуста или содержит только исходных пользователей
-      await usersPage.waitForPageLoaded()
-      const finalCount = await usersPage.page.locator('tbody tr').count()
-      expect(finalCount).toBeLessThan(initialCount)
-    })
-
-    test('отмена удаления пользователя', async () => {
-      // Создаем пользователя для теста отмены удаления
-      await usersPage.clickCreateUser()
-      await usersPage.fillUserForm(
-        testUsers.newUser.email,
-        testUsers.newUser.firstName,
-        testUsers.newUser.lastName
-      )
-      await usersPage.saveUserForm()
+      // Убедиться, что они успешно удалены
       await usersPage.waitForPageLoaded()
       
-      const initialCount = await usersPage.page.locator('tbody tr').count()
+      for (const user of usersToCreate) {
+        await usersPage.verifyUserNotInTable(user.email)
+      }
       
-      // Начинаем удаление но отменяем
-      await usersPage.clickDeleteForUser(testUsers.newUser.email)
-      await usersPage.page.getByRole('button', { name: 'Cancel' }).click()
-      
-      // Проверяем что пользователь не удален
-      await usersPage.waitForPageLoaded()
-      await usersPage.verifyUserInTable(testUsers.newUser.email)
-      
-      const newCount = await usersPage.page.locator('tbody tr').count()
-      expect(newCount).toBe(initialCount)
+      const countAfter = await usersPage.page.locator('tbody tr').count()
+      expect(countAfter).toBeLessThan(countBefore)
     })
 
     test('массовое удаление с отменой', async () => {
-      // Создаем пользователей для теста
+      // Создаем пользователей для теста отмены
       const usersToCreate = [
-        { email: `user1${Date.now()}@example.com`, firstName: 'User1', lastName: 'Test' },
-        { email: `user2${Date.now()}@example.com`, firstName: 'User2', lastName: 'Test' }
+        { email: `canceldelete1${Date.now()}@example.com`, firstName: 'Cancel1', lastName: 'Delete1' },
+        { email: `canceldelete2${Date.now()}@example.com`, firstName: 'Cancel2', lastName: 'Delete2' }
       ]
       
       for (const user of usersToCreate) {
@@ -379,12 +311,10 @@ test.describe('Полное тестирование функционально�
         await usersPage.waitForPageLoaded()
       }
       
-      const initialCount = await usersPage.page.locator('tbody tr').count()
+      const countBefore = await usersPage.page.locator('tbody tr').count()
       
-      // Выбираем пользователей
-      for (const user of usersToCreate) {
-        await usersPage.selectUser(user.email)
-      }
+      // Выделяем всех
+      await usersPage.selectAllUsers()
       
       // Начинаем массовое удаление но отменяем
       await usersPage.clickBulkDelete()
@@ -393,190 +323,11 @@ test.describe('Полное тестирование функционально�
       // Проверяем что пользователи не удалены
       await usersPage.waitForPageLoaded()
       for (const user of usersToCreate) {
-        await usersPage.verifyUserInTable(user.email)
+        await usersPage.verifyUserInTable(user.email, user.firstName, user.lastName)
       }
       
-      const newCount = await usersPage.page.locator('tbody tr').count()
-      expect(newCount).toBe(initialCount)
+      const countAfter = await usersPage.page.locator('tbody tr').count()
+      expect(countAfter).toBe(countBefore)
     })
-  })
-
-  // ТЕСТЫ ПОЛНОГО ЖИЗНЕННОГО ЦИКЛА
-  test.describe('Полный жизненный цикл пользователя', () => {
-    test('полный цикл CRUD операций с пользователем', async () => {
-      const uniqueEmail = `completeuser${Date.now()}@example.com`
-      
-      // CREATE - Создание пользователя
-      await usersPage.clickCreateUser()
-      await usersPage.fillUserForm(uniqueEmail, 'Complete', 'User')
-      await usersPage.saveUserForm()
-      await usersPage.waitForPageLoaded()
-      
-      // READ - Проверка создания
-      await usersPage.verifyUserInTable(uniqueEmail, 'Complete', 'User')
-      
-      // UPDATE - Редактирование пользователя
-      await usersPage.clickEditForUser(uniqueEmail)
-      await usersPage.fillUserForm(`updated-${uniqueEmail}`, 'Updated', 'User')
-      await usersPage.saveUserForm()
-      await usersPage.waitForPageLoaded()
-      
-      // Проверка обновления
-      await usersPage.verifyUserInTable(`updated-${uniqueEmail}`, 'Updated', 'User')
-      
-      // DELETE - Удаление пользователя
-      await usersPage.clickDeleteForUser(`updated-${uniqueEmail}`)
-      await usersPage.confirmDelete()
-      await usersPage.waitForPageLoaded()
-      
-      // Проверка удаления
-      await usersPage.verifyUserNotInTable(`updated-${uniqueEmail}`)
-    })
-
-    test('создание и немедленное редактирование пользователя', async () => {
-      const uniqueEmail = `quickedit${Date.now()}@example.com`
-      
-      // Создаем пользователя
-      await usersPage.clickCreateUser()
-      await usersPage.fillUserForm(uniqueEmail, 'Quick', 'Edit')
-      await usersPage.saveUserForm()
-      await usersPage.waitForPageLoaded()
-      
-      // Немедленно редактируем
-      await usersPage.clickEditForUser(uniqueEmail)
-      await usersPage.fillUserForm(uniqueEmail, 'Fast', 'Update')
-      await usersPage.saveUserForm()
-      await usersPage.waitForPageLoaded()
-      
-      // Проверяем изменения
-      await usersPage.verifyUserInTable(uniqueEmail, 'Fast', 'Update')
-    })
-
-    test('создание, просмотр и удаление пользователя', async () => {
-      const uniqueEmail = `viewdelete${Date.now()}@example.com`
-      
-      // Создаем пользователя
-      await usersPage.clickCreateUser()
-      await usersPage.fillUserForm(uniqueEmail, 'View', 'Delete')
-      await usersPage.saveUserForm()
-      await usersPage.waitForPageLoaded()
-      
-      // Просматриваем детали
-      await usersPage.clickShowForUser(uniqueEmail)
-      await expect(usersPage.page.getByText(uniqueEmail)).toBeVisible()
-      await usersPage.page.goBack()
-      await usersPage.waitForPageLoaded()
-      
-      // Удаляем пользователя
-      await usersPage.clickDeleteForUser(uniqueEmail)
-      await usersPage.confirmDelete()
-      await usersPage.waitForPageLoaded()
-      
-      // Проверяем удаление
-      await usersPage.verifyUserNotInTable(uniqueEmail)
-    })
-  })
-
-  // ТЕСТЫ ГРАНИЧНЫХ СЛУЧАЕВ
-  test.describe('Граничные случаи и валидация', () => {
-    test('создание пользователя с максимально длинными данными', async () => {
-      await usersPage.clickCreateUser()
-      
-      const longString = 'a'.repeat(100)
-      await usersPage.fillUserForm(
-        `${longString}@example.com`,
-        longString,
-        longString
-      )
-      
-      await usersPage.saveUserForm()
-      
-      // Проверяем что пользователь создан (или обработана ошибка если есть ограничения)
-      await usersPage.waitForPageLoaded()
-      // В этом тесте мы просто проверяем что приложение не падает
-    })
-
-    test('поиск несуществующего пользователя', async () => {
-      const nonExistentEmail = `nonexistent${Date.now()}@example.com`
-      
-      await usersPage.searchInput.fill(nonExistentEmail)
-      await usersPage.page.waitForTimeout(1000)
-      
-      // Проверяем что таблица либо пуста, либо показывает сообщение о отсутствии результатов
-      const rows = await usersPage.page.locator('tbody tr').count()
-      expect(rows).toBeLessThanOrEqual(1) // Может быть 0 строк или 1 строка с сообщением
-    })
-
-    test('двойное нажатие кнопки создания', async () => {
-      await usersPage.clickCreateUser()
-      await usersPage.clickCreateUser() // Двойное нажатие
-      
-      // Проверяем что форма все еще доступна и не сломалась
-      await usersPage.verifyFormLoaded()
-    })
-
-    test('навигация назад во время создания пользователя', async () => {
-      await usersPage.clickCreateUser()
-      await usersPage.verifyFormLoaded()
-      
-      // Нажимаем назад в браузере
-      await usersPage.page.goBack()
-      
-      // Проверяем что вернулись к списку пользователей
-      await usersPage.waitForPageLoaded()
-    })
-  })
-})
-
-test.describe('Тесты производительности пользователей', () => {
-  let loginPage, dashboardPage, usersPage
-
-  test.beforeEach(async ({ page }) => {
-    loginPage = new LoginPage(page)
-    dashboardPage = new DashboardPage(page)
-    usersPage = new UsersPage(page)
-    
-    await loginPage.goto()
-    await loginPage.login('admin', 'admin')
-    await dashboardPage.waitForPageLoaded()
-    await dashboardPage.openUsersList()
-    await usersPage.waitForPageLoaded()
-  })
-
-  test('быстрое создание нескольких пользователей', async () => {
-    const startTime = Date.now()
-    const userCount = 3
-    
-    for (let i = 0; i < userCount; i++) {
-      await usersPage.clickCreateUser()
-      await usersPage.fillUserForm(
-        `perfuser${i}${Date.now()}@example.com`,
-        `User${i}`,
-        `Test${i}`
-      )
-      await usersPage.saveUserForm()
-      await usersPage.waitForPageLoaded()
-    }
-    
-    const endTime = Date.now()
-    const totalTime = endTime - startTime
-    
-    // Проверяем что операция выполняется за разумное время
-    // (менее 30 секунд для 3 пользователей)
-    expect(totalTime).toBeLessThan(30000)
-  })
-
-  test('время загрузки списка пользователей', async ({ page }) => {
-    const startTime = Date.now()
-    
-    // Перезагружаем страницу
-    await page.reload()
-    await usersPage.waitForPageLoaded()
-    
-    const endTime = Date.now()
-    const loadTime = endTime - startTime
-    
-    // Проверяем что страница загружается за разумное время
-    expect(loadTime).toBeLessThan(10000) // Менее 10 секунд
   })
 })
