@@ -60,7 +60,6 @@ test.describe('Проверка дашборда и навигации', () => {
     const usersPage = new UsersPage(page)
     const tasksPage = new TasksPage(page)
 
-    // Проверяем последовательный переход по всем разделам
     await dashboardPage.openStatusesList()
     await statusesPage.waitForPageLoaded()
 

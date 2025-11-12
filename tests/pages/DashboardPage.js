@@ -1,44 +1,46 @@
-const { expect } = require('@playwright/test')
-const { mainPageElements } = require('../utils/constants.js')
+const BasePage = require('./BasePage')
 
-class DashboardPage {
+class DashboardPage extends BasePage {
   constructor(page) {
-    this.page = page
-    this.themeButton = page.getByRole('button', { name: mainPageElements.themeButtonLabel })
-    this.profileButton = page.getByRole('button', { name: mainPageElements.profileButtonLabel })
-    this.logoutButton = page.getByRole('menuitem', { name: mainPageElements.logoutButtonLabel })
-    this.welcomeText = page.getByText(mainPageElements.welcomeText)
-    this.usersMenuItem = page.getByRole('menuitem', { name: mainPageElements.usersMenuItemLabel })
-    this.statusMenuItem = page.getByRole('menuitem', { name: mainPageElements.statusMenuItemLabel })
-    this.labelMenuItem = page.getByRole('menuitem', { name: mainPageElements.labelMenuItemLabel })
-    this.tasksMenuItem = page.getByRole('menuitem', { name: mainPageElements.tasksMenuItemLabel })
+    super(page)
+    this.profileButton = page.getByRole('button', { name: 'Profile' })
+    this.logoutButton = page.getByRole('menuitem', { name: 'Logout' })
+    this.welcomeText = page.getByText('Welcome')
+    this.usersMenuItem = page.getByRole('menuitem', { name: 'Users' })
+    this.statusMenuItem = page.getByRole('menuitem', { name: 'Task statuses' })
+    this.labelMenuItem = page.getByRole('menuitem', { name: 'Labels' })
+    this.tasksMenuItem = page.getByRole('menuitem', { name: 'Tasks' })
   }
 
   async waitForPageLoaded() {
-    await expect(this.themeButton).toBeVisible()
-    await expect(this.profileButton).toBeVisible()
-    await expect(this.welcomeText).toBeVisible()
+    await this.waitForElement(this.profileButton)
+    await this.waitForElement(this.welcomeText)
+  }
+
+  async verifyDashboardElements() {
+    await this.waitForPageLoaded()
+    await this.shouldSee('Welcome')
   }
 
   async openUsersList() {
-    await this.usersMenuItem.click()
+    await this.click(this.usersMenuItem)
   }
 
   async openStatusesList() {
-    await this.statusMenuItem.click()
+    await this.click(this.statusMenuItem)
   }
 
   async openLabelsList() {
-    await this.labelMenuItem.click()
+    await this.click(this.labelMenuItem)
   }
 
   async openTasksList() {
-    await this.tasksMenuItem.click()
+    await this.click(this.tasksMenuItem)
   }
 
   async logout() {
-    await this.profileButton.click()
-    await this.logoutButton.click()
+    await this.click(this.profileButton)
+    await this.click(this.logoutButton)
   }
 }
 

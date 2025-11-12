@@ -1,104 +1,57 @@
-const { expect } = require('@playwright/test')
+const BasePage = require('./BasePage')
 
-class UsersPage {
+class UsersPage extends BasePage {
   constructor(page) {
-    this.page = page
+    super(page)
     this.header = page.getByRole('heading', { name: 'Users' })
     this.createButton = page.getByRole('button', { name: 'CREATE' })
-    this.searchInput = page.getByPlaceholder('Search...')
     this.saveButton = page.getByRole('button', { name: 'SAVE' })
-    this.bulkDeleteButton = page.getByRole('button', { name: 'Delete' })
+    this.emailInput = page.getByLabel('Email*')
+    this.firstNameInput = page.getByLabel('First name*')
+    this.lastNameInput = page.getByLabel('Last name*')
   }
 
   async waitForPageLoaded() {
-    await expect(this.header).toBeVisible()
-    await expect(this.createButton).toBeVisible()
+    await this.waitForElement(this.header)
+    await this.waitForElement(this.createButton)
   }
 
-  get emailInput() { return this.page.getByLabel('Email*') }
-  get firstNameInput() { return this.page.getByLabel('First name*') }
-  get lastNameInput() { return this.page.getByLabel('Last name*') }
-  get validationError() { return this.page.locator('.Mui-error') }
-
-  async clickCreateUser() {
-    await this.createButton.click()
-    await expect(this.emailInput).toBeVisible({ timeout: 5000 })
+  async createUser(email, firstName, lastName) {
+    await this.click(this.createButton)
+    await this.fill(this.emailInput, email)
+    await this.fill(this.firstNameInput, firstName)
+    await this.fill(this.lastNameInput, lastName)
+    await this.click(this.saveButton)
   }
 
-  async clickEditForUser(email) {
+  async editUser(oldEmail, newEmail, newFirstName, newLastName) {
+    await this.clickEditButton(oldEmail)
+    await this.fill(this.emailInput, newEmail)
+    await this.fill(this.firstNameInput, newFirstName)
+    await this.fill(this.lastNameInput, newLastName)
+    await this.click(this.saveButton)
+  }
+
+  async clickEditButton(email) {
     const row = this.page.locator('tr', { has: this.page.getByText(email) })
     await row.getByRole('button', { name: 'EDIT' }).first().click()
-    await expect(this.emailInput).toBeVisible({ timeout: 5000 })
   }
 
-  async clickDeleteForUser(email) {
+  async deleteUser(email) {
+    await this.clickDeleteButton(email)
+    await this.helpers.clickConfirm(this.page)
+  }
+
+  async clickDeleteButton(email) {
     const row = this.page.locator('tr', { has: this.page.getByText(email) })
     await row.getByRole('button', { name: 'Delete' }).click()
   }
 
-  async fillUserForm(email, firstName, lastName) {
-    if (email !== undefined) {
-      await this.emailInput.clear()
-      await this.emailInput.fill(email)
+  async verifyUsersTable() {
+    const rows = await this.helpers.getRowCount(this.page)
+    if (rows === 0) {
+      await this.shouldSee('john@google.com')
     }
-    if (firstName !== undefined) {
-      await this.firstNameInput.clear()
-      await this.firstNameInput.fill(firstName)
-    }
-    if (lastName !== undefined) {
-      await this.lastNameInput.clear()
-      await this.lastNameInput.fill(lastName)
-    }
-  }
-
-  async saveUserForm() {
-    await this.saveButton.click()
-  }
-
-  async confirmDelete() {
-    await this.page.getByRole('button', { name: 'Confirm' }).click()
-  }
-
-  async selectUser(email) {
-    const row = this.page.locator('tr', { has: this.page.getByText(email) })
-    const checkbox = row.locator('input[type="checkbox"]')
-    await checkbox.check()
-  }
-
-  async selectAllUsers() {
-    const bulkCheckbox = this.page.locator('thead input[type="checkbox"]')
-    await bulkCheckbox.check()
-  }
-
-  async clickBulkDelete() {
-    await this.bulkDeleteButton.click()
-  }
-
-  async verifyUserInTable(email, firstName, lastName) {
-    const row = this.page.locator('tr', { has: this.page.getByText(email) })
-    await expect(row).toBeVisible()
-    if (firstName) {
-      await expect(row.getByText(firstName)).toBeVisible()
-    }
-    if (lastName) {
-      await expect(row.getByText(lastName)).toBeVisible()
-    }
-  }
-
-  async verifyUserNotInTable(email) {
-    const row = this.page.locator('tr', { has: this.page.getByText(email) })
-    await expect(row).not.toBeVisible()
-  }
-
-  async verifyFormValidation() {
-    await expect(this.validationError).toBeVisible()
-  }
-
-  async verifyFormLoaded() {
-    await expect(this.emailInput).toBeVisible()
-    await expect(this.firstNameInput).toBeVisible()
-    await expect(this.lastNameInput).toBeVisible()
-    await expect(this.saveButton).toBeVisible()
   }
 }
 

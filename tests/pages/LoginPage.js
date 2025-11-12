@@ -1,13 +1,11 @@
-const { expect } = require('@playwright/test')
-const { authElements } = require('../utils/constants.js')
+const BasePage = require('./BasePage')
 
-class LoginPage {
+class LoginPage extends BasePage {
   constructor(page) {
-    this.page = page
-    this.usernameInput = page.getByLabel(authElements.usernameLabel)
-    this.passwordInput = page.getByLabel(authElements.passwordLabel)
-    this.signInButton = page.getByRole('button', { name: authElements.signInButton })
-    this.errorMessage = page.locator('.error-message')
+    super(page)
+    this.usernameInput = page.getByLabel('Username*')
+    this.passwordInput = page.getByLabel('Password*')
+    this.signInButton = page.getByRole('button', { name: 'SIGN IN' })
   }
 
   async goto() {
@@ -16,33 +14,11 @@ class LoginPage {
   }
 
   async waitForPageLoaded() {
-    await expect(this.usernameInput).toBeVisible()
-    await expect(this.passwordInput).toBeVisible()
-    await expect(this.signInButton).toBeVisible()
-  }
-
-  async fillCredentials(username, password) {
-    await this.usernameInput.fill(username)
-    await this.passwordInput.fill(password)
-  }
-
-  async submit() {
-    await this.signInButton.click()
+    await this.waitForElement(this.usernameInput)
   }
 
   async login(username, password) {
-    await this.fillCredentials(username, password)
-    await this.submit()
-  }
-
-  async getErrorMessage() {
-    return await this.errorMessage.textContent()
-  }
-
-  async isLoginFormVisible() {
-    return await this.usernameInput.isVisible() && 
-           await this.passwordInput.isVisible() && 
-           await this.signInButton.isVisible()
+    await this.helpers.login(this.page, username, password)
   }
 }
 
