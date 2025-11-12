@@ -12,26 +12,12 @@ class DashboardPage {
     this.statusMenuItem = page.getByRole('menuitem', { name: mainPageElements.statusMenuItemLabel })
     this.labelMenuItem = page.getByRole('menuitem', { name: mainPageElements.labelMenuItemLabel })
     this.tasksMenuItem = page.getByRole('menuitem', { name: mainPageElements.tasksMenuItemLabel })
-    this.dashboardHeader = page.getByRole('heading', { name: 'Dashboard' })
   }
 
   async waitForPageLoaded() {
     await expect(this.themeButton).toBeVisible()
     await expect(this.profileButton).toBeVisible()
     await expect(this.welcomeText).toBeVisible()
-
-    if (await this.dashboardHeader.isVisible()) {
-      await expect(this.dashboardHeader).toBeVisible()
-    }
-  }
-
-  async openCurrentUserProfile() {
-    await this.profileButton.click()
-  }
-
-  async logout() {
-    await this.profileButton.click()
-    await this.logoutButton.click()
   }
 
   async openUsersList() {
@@ -50,12 +36,9 @@ class DashboardPage {
     await this.tasksMenuItem.click()
   }
 
-  async verifyDashboardElements() {
-    await this.waitForPageLoaded()
-    const menuItems = [this.usersMenuItem, this.statusMenuItem, this.labelMenuItem, this.tasksMenuItem]
-    for (const item of menuItems) {
-      await expect(item).toBeVisible()
-    }
+  async logout() {
+    await this.profileButton.click()
+    await this.logoutButton.click()
   }
 }
 
