@@ -68,7 +68,7 @@ const mainPageElements = {
     }
   }
   
-  module.exports = {
+  export default {
     mainPageElements,
     authElements,
     tableElements,

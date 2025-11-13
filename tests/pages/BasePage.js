@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test'
-import Helpers from '../utils/helpers'
+import { Helpers } from '../utils/helpers.js'
 
 class BasePage {
   constructor(page) {

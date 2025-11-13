@@ -1,4 +1,4 @@
-import BasePage from './BasePage'
+import { BasePage } from './BasePage.js'
 
 class DashboardPage extends BasePage {
   constructor(page) {
