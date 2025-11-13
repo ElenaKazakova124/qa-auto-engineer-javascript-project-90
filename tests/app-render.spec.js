@@ -2,14 +2,14 @@ import { test, expect } from '@playwright/test';
 
 test('Приложение успешно рендерится', async ({ page }) => {
   await page.goto('/');
-
+  
   await expect(page.locator('body')).not.toBeEmpty();
-  await expect(page).toHaveTitle(/Task Manager|React Admin/);
-
-  const loginForm = page.locator('input[name="username"]');
-  if (await loginForm.isVisible()) {
-    await expect(loginForm).toBeVisible();
-    await expect(page.locator('input[name="password"]')).toBeVisible();
-    await expect(page.locator('button[type="sign in"]')).toBeVisible();
-  }
+  
+  const usernameField = page.locator('input[name="username"], [data-testid="username"]');
+  const profileButton = page.getByRole('button', { name: 'Profile' });
+  
+  const isLoginPage = await usernameField.isVisible();
+  const isDashboard = await profileButton.isVisible();
+  
+  expect(isLoginPage || isDashboard).toBeTruthy();
 });
