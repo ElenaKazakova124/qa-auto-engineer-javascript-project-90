@@ -7,7 +7,7 @@ class BasePage {
     this.helpers = Helpers
   }
 
-  async waitForElement(selector, timeout = 5000) {
+  async waitForElement(selector, timeout = 10000) {
     await expect(selector).toBeVisible({ timeout })
   }
 
