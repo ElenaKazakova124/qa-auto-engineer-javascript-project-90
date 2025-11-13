@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import LoginPage from '/pages/LoginPage.js'
+import LoginPage from './pages/LoginPage.js'
 import DashboardPage from './pages/DashboardPage.js'
 
 test('авторизация и выход', async ({ page }) => {
