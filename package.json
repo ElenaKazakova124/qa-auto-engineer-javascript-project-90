@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "exports": {
+    "./*": "./*"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -41,3 +44,4 @@
   },
   "homepage": "https://github.com/ElenaKazakova124/qa-auto-engineer-javascript-project-90#readme"
 }
+
