@@ -5,7 +5,7 @@ class LoginPage extends BasePage {
     super(page)
     this.usernameField = page.getByLabel('Username*')
     this.passwordField = page.getByLabel('Password*')
-    this.signInButton = page.getByRole('button', { name: 'SIGN IN' })
+    this.signInButton = page.getByRole('button', { name: 'Sign in' })
   }
 
   async goto() {
