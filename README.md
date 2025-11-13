@@ -1,7 +1,6 @@
 # Testing the Kanban Board
 
 [![Actions Status](https://github.com/ElenaKazakova124/qa-auto-engineer-javascript-project-90/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/ElenaKazakova124/qa-auto-engineer-javascript-project-90/actions)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ElenaKazakova124_qa-auto-engineer-javascript-project-90&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ElenaKazakova124_qa-auto-engineer-javascript-project-90)
 
 Целью проекта является тестирование приложения управления задачами, разработанного с использованием react-admin, с помощью инструмента автоматизации тестирования playwright. Тестирование направлено на обеспечение корректной работы основных функций приложения, таких как создание, редактирование, удаление и перемещение задач, а также авторизация пользователей.
 
