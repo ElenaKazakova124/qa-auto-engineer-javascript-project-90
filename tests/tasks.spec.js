@@ -1,7 +1,7 @@
-const { test } = require('@playwright/test')
-const LoginPage = require('../pages/LoginPage.js')
-const DashboardPage = require('./pages/DashboardPage.js')
-const TasksPage = require('./pages/TasksPage.js')
+import { test } from '@playwright/test'
+import LoginPage from '../pages/LoginPage.js'
+import DashboardPage from './pages/DashboardPage.js'
+import TasksPage from './pages/TasksPage.js'
 
 test.describe('Задачи', () => {
   test.beforeEach(async ({ page }) => {

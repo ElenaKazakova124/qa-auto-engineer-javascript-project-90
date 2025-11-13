@@ -1,6 +1,6 @@
-const { test, expect } = require('@playwright/test')
-const LoginPage = require('../pages/LoginPage.js')
-const DashboardPage = require('./pages/DashboardPage.js')
+import { test, expect } from '@playwright/test'
+import LoginPage from '../pages/LoginPage.js'
+import DashboardPage from './pages/DashboardPage.js'
 
 test('авторизация и выход', async ({ page }) => {
   const loginPage = new LoginPage(page)

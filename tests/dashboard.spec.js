@@ -1,10 +1,10 @@
-const { test, expect } = require('@playwright/test')
-const LoginPage = require('../pages/LoginPage.js')
-const DashboardPage = require('./pages/DashboardPage.js')
-const StatusesPage = require('./pages/StatusesPage.js')
-const LabelsPage = require('./pages/LabelsPage.js')
-const UsersPage = require('./pages/UsersPage.js')
-const TasksPage = require('./pages/TasksPage.js')
+import { test, expect } from '@playwright/test'
+import LoginPage from '../pages/LoginPage.js'
+import DashboardPage from './pages/DashboardPage.js'
+import StatusesPage from './pages/StatusesPage.js'
+import LabelsPage from './pages/LabelsPage.js'
+import UsersPage from './pages/UsersPage.js'
+import TasksPage from './pages/TasksPage.js'
 
 test.describe('Проверка дашборда и навигации', () => {
   let loginPage, dashboardPage

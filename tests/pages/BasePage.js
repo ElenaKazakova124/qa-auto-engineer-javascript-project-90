@@ -1,5 +1,5 @@
-const { expect } = require('@playwright/test')
-const Helpers = require('../utils/helpers')
+import { expect } from '@playwright/test'
+import Helpers from '../utils/helpers'
 
 class BasePage {
   constructor(page) {
@@ -30,4 +30,4 @@ class BasePage {
   }
 }
 
-module.exports = BasePage
+export default BasePage

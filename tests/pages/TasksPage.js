@@ -1,4 +1,4 @@
-const BasePage = require('./BasePage')
+import BasePage from './BasePage'
 
 class TasksPage extends BasePage {
   constructor(page) {
@@ -61,4 +61,4 @@ class TasksPage extends BasePage {
   }
 }
 
-module.exports = TasksPage
+export default TasksPage
