@@ -1,4 +1,4 @@
-import { BasePage } from './BasePage.js'
+import BasePage from './BasePage.js'
 
 class TasksPage extends BasePage {
   constructor(page) {
