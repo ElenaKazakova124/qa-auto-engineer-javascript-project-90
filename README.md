@@ -1,16 +1,40 @@
-# React + Vite
+# Testing the Kanban Board
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![Actions Status](https://github.com/ElenaKazakova124/qa-auto-engineer-javascript-project-90/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/ElenaKazakova124/qa-auto-engineer-javascript-project-90/actions)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ElenaKazakova124_qa-auto-engineer-javascript-project-90&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ElenaKazakova124_qa-auto-engineer-javascript-project-90)
 
-Currently, two official plugins are available:
+Целью проекта является тестирование приложения управления задачами, разработанного с использованием react-admin, с помощью инструмента автоматизации тестирования playwright. Тестирование направлено на обеспечение корректной работы основных функций приложения, таких как создание, редактирование, удаление и перемещение задач, а также авторизация пользователей.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Описание
 
-## React Compiler
+Task Manager – система управления задачами, подобная http://www.redmine.org/. Она позволяет ставить задачи, назначать исполнителей и менять их статусы. Для работы с системой требуется регистрация и аутентификация.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+В приложении реализованы следующие основные функции:
+Управление задачами: пользователи могут создавать новые задачи, назначать исполнителей, изменять статусы задач (например, "in progress", "draft", "done"), редактировать и удалять задачи.
+Управление пользователями: администраторы могут создавать новых пользователей и просматривать список существующих пользователей.
+Управление метками: пользователи могут создавать и редактировать метки для задач, такие как "bug", "feature" и т. д.
+Управление статусами задач: администраторы могут создавать и редактировать статусы задач, которые определяют колонки на канбан-доске, такие как "draft", "in progress" и т. д.
+Для тестирования приложения используется библиотека playwright, которая позволяет автоматизировать взаимодействие с интерфейсом приложения, эмулируя действия пользователя и проверяя корректность работы различных функций.
 
-## Expanding the ESLint configuration
+### Установка
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Клонируйте репозиторий:
+```bash
+git clone https://github.com/your-username/qa-auto-engineer-javascript-project-90.git
+cd qa-auto-engineer-javascript-project-90
+```
+
+2. Установите зависимости:
+```bash
+npm install
+```
+
+### Запуск приложения
+
+#### Режим разработки
+```bash
+npm run dev
+```
+Приложение будет доступно по адресу: http://localhost:5174
+
+
