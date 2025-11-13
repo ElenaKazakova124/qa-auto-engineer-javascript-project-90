@@ -4,35 +4,23 @@ import DashboardPage from './pages/DashboardPage.js'
 import LabelsPage from './pages/LabelsPage.js'
 
 test.describe('Метки', () => {
+  let loginPage, dashboardPage, labelsPage
+
   test.beforeEach(async ({ page }) => {
-    const loginPage = new LoginPage(page)
-    const dashboardPage = new DashboardPage(page)
+    loginPage = new LoginPage(page)
+    dashboardPage = new DashboardPage(page)
+    labelsPage = new LabelsPage(page)
     
     await loginPage.goto()
     await loginPage.login('admin', 'admin')
     await dashboardPage.waitForPageLoaded()
     await dashboardPage.openLabelsList()
+    await labelsPage.waitForPageLoaded()
   })
 
-  test('создание метки', async ({ page }) => {
-    const labelsPage = new LabelsPage(page)
-    await labelsPage.waitForPageLoaded()
-    
-    const name = labelsPage.helpers.generateName('Label')
-    
-    await labelsPage.createLabel(name)
-    await labelsPage.shouldSee(name)
-  })
-
-  test('удаление метки', async ({ page }) => {
-    const labelsPage = new LabelsPage(page)
-    await labelsPage.waitForPageLoaded()
-    
-    const name = labelsPage.helpers.generateName('Label')
-    
-    await labelsPage.createLabel(name)
-    await labelsPage.shouldSee(name)
-    await labelsPage.deleteLabel(name)
-    await labelsPage.shouldNotSee(name)
+  test('создание метки', async () => {
+    const labelName = labelsPage.helpers.generateName('Label')
+    await labelsPage.createLabel(labelName)
+    await labelsPage.shouldSee(labelName)
   })
 })

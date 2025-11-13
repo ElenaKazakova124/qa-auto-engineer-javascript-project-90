@@ -1,15 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test'
 
 test('Приложение успешно рендерится', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/')
   
-  await expect(page.locator('body')).not.toBeEmpty();
+  await expect(page.locator('body')).not.toBeEmpty()
   
-  const usernameField = page.locator('input[name="username"], [data-testid="username"]');
-  const profileButton = page.getByRole('button', { name: 'Profile' });
+  const usernameInput = page.locator('input[name="username"]')
+  const profileButton = page.getByRole('button', { name: 'Profile' })
   
-  const isLoginPage = await usernameField.isVisible();
-  const isDashboard = await profileButton.isVisible();
+  const isLoginPage = await usernameInput.isVisible().catch(() => false)
+  const isDashboard = await profileButton.isVisible().catch(() => false)
   
-  expect(isLoginPage || isDashboard).toBeTruthy();
-});
+  expect(isLoginPage || isDashboard).toBeTruthy()
+})

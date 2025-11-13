@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test'
-import  Helpers  from '../utils/helpers.js'
+import Helpers from '../utils/helpers.js'
 
 class BasePage {
   constructor(page) {
@@ -9,6 +9,10 @@ class BasePage {
 
   async waitForElement(selector, timeout = 10000) {
     await expect(selector).toBeVisible({ timeout })
+  }
+
+  async waitForElementHidden(selector, timeout = 5000) {
+    await expect(selector).toBeHidden({ timeout })
   }
 
   async click(selector) {
@@ -21,12 +25,21 @@ class BasePage {
     await selector.fill(value)
   }
 
+  async getText(selector) {
+    await this.waitForElement(selector)
+    return await selector.textContent()
+  }
+
   async shouldSee(text) {
     await this.helpers.shouldSee(this.page, text)
   }
 
   async shouldNotSee(text) {
     await this.helpers.shouldNotSee(this.page, text)
+  }
+
+  async waitForPageLoad() {
+    await this.page.waitForLoadState('networkidle')
   }
 }
 

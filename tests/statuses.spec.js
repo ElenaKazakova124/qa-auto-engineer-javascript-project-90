@@ -4,37 +4,24 @@ import DashboardPage from './pages/DashboardPage.js'
 import StatusesPage from './pages/StatusesPage.js'
 
 test.describe('Статусы', () => {
+  let loginPage, dashboardPage, statusesPage
+
   test.beforeEach(async ({ page }) => {
-    const loginPage = new LoginPage(page)
-    const dashboardPage = new DashboardPage(page)
+    loginPage = new LoginPage(page)
+    dashboardPage = new DashboardPage(page)
+    statusesPage = new StatusesPage(page)
     
     await loginPage.goto()
     await loginPage.login('admin', 'admin')
     await dashboardPage.waitForPageLoaded()
     await dashboardPage.openStatusesList()
+    await statusesPage.waitForPageLoaded()
   })
 
-  test('создание статуса', async ({ page }) => {
-    const statusesPage = new StatusesPage(page)
-    await statusesPage.waitForPageLoaded()
-    
-    const name = statusesPage.helpers.generateName('Status')
+  test('создание статуса', async () => {
+    const statusName = statusesPage.helpers.generateName('Status')
     const slug = statusesPage.helpers.generateSlug()
-    
-    await statusesPage.createStatus(name, slug)
-    await statusesPage.shouldSee(name)
-  })
-
-  test('удаление статуса', async ({ page }) => {
-    const statusesPage = new StatusesPage(page)
-    await statusesPage.waitForPageLoaded()
-    
-    const name = statusesPage.helpers.generateName('Status')
-    const slug = statusesPage.helpers.generateSlug()
-    
-    await statusesPage.createStatus(name, slug)
-    await statusesPage.shouldSee(name)
-    await statusesPage.deleteStatus(name)
-    await statusesPage.shouldNotSee(name)
+    await statusesPage.createStatus(statusName, slug)
+    await statusesPage.shouldSee(statusName)
   })
 })

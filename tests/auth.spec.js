@@ -1,15 +1,14 @@
 import { test, expect } from '@playwright/test'
-import LoginPage from './pages/LoginPage.js'
-import DashboardPage from './pages/DashboardPage.js'
+import Helpers from './utils/helpers.js'
 
 test('авторизация и выход', async ({ page }) => {
-  const loginPage = new LoginPage(page)
-  const dashboardPage = new DashboardPage(page)
-
-  await loginPage.goto()
-  await loginPage.login('admin', 'admin')
-  await dashboardPage.waitForPageLoaded()
-  await dashboardPage.logout()
-  await loginPage.waitForPageLoaded()
-  await expect(loginPage.signInButton).toBeVisible()
+  await Helpers.login(page, 'admin', 'admin')
+  
+  const profileButton = page.getByRole('button', { name: 'Profile' })
+  await expect(profileButton).toBeVisible()
+  
+  await Helpers.logout(page)
+  
+  const signInButton = page.getByRole('button', { name: 'SIGN IN' })
+  await expect(signInButton).toBeVisible()
 })

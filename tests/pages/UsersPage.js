@@ -3,55 +3,60 @@ import BasePage from './BasePage.js'
 class UsersPage extends BasePage {
   constructor(page) {
     super(page)
-    this.header = page.getByRole('heading', { name: 'Users' })
-    this.createButton = page.getByRole('button', { name: 'CREATE' })
-    this.saveButton = page.getByRole('button', { name: 'SAVE' })
-    this.emailInput = page.getByLabel('Email*')
-    this.firstNameInput = page.getByLabel('First name*')
-    this.lastNameInput = page.getByLabel('Last name*')
+    this.createButton = page.locator('button:has-text("CREATE")')
+    this.emailField = page.getByLabel('Email*')
+    this.firstNameField = page.getByLabel('First Name*')
+    this.lastNameField = page.getByLabel('Last Name*')
+    this.saveButton = page.locator('button:has-text("SAVE")')
   }
 
   async waitForPageLoaded() {
-    await this.waitForElement(this.header)
     await this.waitForElement(this.createButton)
   }
 
-  async createUser(email, firstName, lastName) {
+  async clickCreate() {
     await this.click(this.createButton)
-    await this.fill(this.emailInput, email)
-    await this.fill(this.firstNameInput, firstName)
-    await this.fill(this.lastNameInput, lastName)
-    await this.click(this.saveButton)
+    await this.waitForPageLoad()
   }
 
-  async editUser(oldEmail, newEmail, newFirstName, newLastName) {
-    await this.clickEditButton(oldEmail)
-    await this.fill(this.emailInput, newEmail)
-    await this.fill(this.firstNameInput, newFirstName)
-    await this.fill(this.lastNameInput, newLastName)
-    await this.click(this.saveButton)
+  async fillUserForm(email, firstName, lastName) {
+    await this.fill(this.emailField, email)
+    await this.fill(this.firstNameField, firstName)
+    await this.fill(this.lastNameField, lastName)
   }
 
-  async clickEditButton(email) {
-    const row = this.page.locator('tr', { has: this.page.getByText(email) })
-    await row.getByRole('button', { name: 'EDIT' }).first().click()
+  async clickSave() {
+    await this.click(this.saveButton)
+    await this.waitForPageLoad()
+  }
+
+  async createUser(email, firstName, lastName) {
+    await this.clickCreate()
+    await this.fillUserForm(email, firstName, lastName)
+    await this.clickSave()
+  }
+
+  async editUser(oldEmail, newEmail, firstName, lastName) {
+    await this.clickEdit(oldEmail)
+    await this.fillUserForm(newEmail, firstName, lastName)
+    await this.clickSave()
   }
 
   async deleteUser(email) {
-    await this.clickDeleteButton(email)
+    await this.clickDelete(email)
+    await this.clickConfirm()
+  }
+
+  async clickEdit(itemText) {
+    await this.helpers.clickEdit(this.page, itemText)
+  }
+
+  async clickDelete(itemText) {
+    await this.helpers.clickDelete(this.page, itemText)
+  }
+
+  async clickConfirm() {
     await this.helpers.clickConfirm(this.page)
-  }
-
-  async clickDeleteButton(email) {
-    const row = this.page.locator('tr', { has: this.page.getByText(email) })
-    await row.getByRole('button', { name: 'Delete' }).click()
-  }
-
-  async verifyUsersTable() {
-    const rows = await this.helpers.getRowCount(this.page)
-    if (rows === 0) {
-      await this.shouldSee('john@google.com')
-    }
   }
 }
 
