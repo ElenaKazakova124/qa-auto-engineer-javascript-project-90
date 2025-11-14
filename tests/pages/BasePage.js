@@ -1,6 +1,5 @@
-// tests/pages/BasePage.js
 import { expect } from '@playwright/test'
-import Helpers from '../utils/helpers.js'
+import Helpers from '../utils/helpers.js' 
 
 class BasePage {
   constructor(page) {
@@ -15,7 +14,6 @@ class BasePage {
       console.log(`Элемент не найден: ${selector}`)
       console.log('Текущий URL:', this.page.url())
       
-      // Логируем все кнопки на странице для отладки
       const buttons = await this.page.$$('button')
       console.log(`На странице найдено ${buttons.length} кнопок:`)
       for (let i = 0; i < buttons.length; i++) {
@@ -24,13 +22,8 @@ class BasePage {
         console.log(`  Кнопка ${i}: "${text?.trim()}"`)
       }
       
-      await this.page.screenshot({ path: `/project/debug-error-${Date.now()}.png` })
       throw error
     }
-  }
-
-  async waitForElementHidden(selector, timeout = 5000) {
-    await expect(selector).toBeHidden({ timeout })
   }
 
   async click(selector) {
@@ -41,19 +34,6 @@ class BasePage {
   async fill(selector, value) {
     await this.waitForElement(selector)
     await selector.fill(value)
-  }
-
-  async getText(selector) {
-    await this.waitForElement(selector)
-    return await selector.textContent()
-  }
-
-  async shouldSee(text) {
-    await this.helpers.shouldSee(this.page, text)
-  }
-
-  async shouldNotSee(text) {
-    await this.helpers.shouldNotSee(this.page, text)
   }
 
   async waitForPageLoad() {

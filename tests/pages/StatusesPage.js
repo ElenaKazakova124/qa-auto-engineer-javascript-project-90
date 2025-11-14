@@ -1,44 +1,46 @@
-// tests/pages/StatusesPage.js
 import BasePage from './BasePage.js'
 
 class StatusesPage extends BasePage {
   constructor(page) {
     super(page)
-    // Используем несколько вариантов локаторов
-    this.createButton = page.locator('button:has-text("+ CREATE"), button:has-text("CREATE"), button:has-text("Create"), [aria-label*="create"], [aria-label*="add"]').first()
-    this.nameField = page.getByLabel('Name*')
-    this.slugField = page.getByLabel('Slug*')
-    this.saveButton = page.locator('button:has-text("SAVE"), button[type="submit"]').first()
+    this.createButton = page.locator('button:has-text("Create")')
+    this.nameField = page.getByLabel('Name')
+    this.slugField = page.getByLabel('Slug')
+    this.saveButton = page.locator('button:has-text("Save")')
+    this.pageTitle = page.locator('h1, h2, h3').filter({ hasText: /Statuses?/i })
   }
 
   async waitForPageLoaded() {
-    // Ждем появления любой релевантной кнопки или элемента
+    await this.helpers.diagnosePageState(this.page, 'StatusesPage')
+    
     await Promise.race([
-      this.createButton.waitFor({ state: 'visible', timeout: 20000 }),
-      this.page.locator('button:has-text("Export")').waitFor({ state: 'visible', timeout: 20000 }),
-      this.page.locator('h2:has-text("Statuses")').waitFor({ state: 'visible', timeout: 20000 })
+      this.pageTitle.waitFor({ state: 'visible', timeout: 15000 }),
+      this.createButton.waitFor({ state: 'visible', timeout: 15000 }),
+      this.page.locator('button:has-text("Export")').waitFor({ state: 'visible', timeout: 15000 })
     ])
   }
 
-  async clickCreate() {
-    await this.click(this.createButton)
-    await this.waitForPageLoad()
+  async openCreateForm() {
+    console.log('Opening create form for statuses...')
+    await this.helpers.clickCreate(this.page)
+    await this.waitForElement(this.nameField, 10000)
   }
 
   async fillStatusForm(name, slug) {
     await this.fill(this.nameField, name)
-    await this.fill(this.slugField, slug)
+    if (slug && await this.slugField.isVisible()) {
+      await this.fill(this.slugField, slug)
+    }
   }
 
-  async clickSave() {
-    await this.click(this.saveButton)
-    await this.waitForPageLoad()
+  async saveForm() {
+    await this.helpers.clickSave(this.page)
   }
 
-  async createStatus(name, slug) {
-    await this.clickCreate()
+  async createStatus(name, slug = '') {
+    await this.openCreateForm()
     await this.fillStatusForm(name, slug)
-    await this.clickSave()
+    await this.saveForm()
   }
 }
 

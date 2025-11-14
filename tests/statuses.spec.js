@@ -1,7 +1,8 @@
-import { test } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import LoginPage from './pages/LoginPage.js'
 import DashboardPage from './pages/DashboardPage.js'
 import StatusesPage from './pages/StatusesPage.js'
+import Helpers from './utils/helpers.js'
 
 test.describe('Статусы', () => {
   let loginPage, dashboardPage, statusesPage
@@ -18,10 +19,11 @@ test.describe('Статусы', () => {
     await statusesPage.waitForPageLoaded()
   })
 
-  test('создание статуса', async () => {
-    const statusName = statusesPage.helpers.generateName('Status')
-    const slug = statusesPage.helpers.generateSlug()
+  test('создание статуса', async ({ page }) => {
+    const statusName = Helpers.generateName('Status')
+    const slug = Helpers.generateSlug()
+    
     await statusesPage.createStatus(statusName, slug)
-    await statusesPage.shouldSee(statusName)
+    await expect(page.getByText(statusName)).toBeVisible({ timeout: 10000 })
   })
 })

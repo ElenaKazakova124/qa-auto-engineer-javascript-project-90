@@ -1,7 +1,8 @@
-import { test } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import LoginPage from './pages/LoginPage.js'
 import DashboardPage from './pages/DashboardPage.js'
 import TasksPage from './pages/TasksPage.js'
+import Helpers from './utils/helpers.js'
 
 test.describe('Задачи', () => {
   let loginPage, dashboardPage, tasksPage
@@ -18,9 +19,9 @@ test.describe('Задачи', () => {
     await tasksPage.waitForPageLoaded()
   })
 
-  test('создание задачи', async () => {
-    const taskName = tasksPage.helpers.generateTaskTitle()
+  test('создание задачи', async ({ page }) => {
+    const taskName = Helpers.generateTaskTitle()
     await tasksPage.createTask(taskName)
-    await tasksPage.shouldSee(taskName)
+    await expect(page.getByText(taskName)).toBeVisible({ timeout: 10000 })
   })
 })

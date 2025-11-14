@@ -12,27 +12,43 @@ class DashboardPage extends BasePage {
   }
 
   async waitForPageLoaded() {
-    await this.waitForElement(this.profileButton)
+    await this.helpers.diagnosePageState(this.page, 'DashboardPage')
+    
+    await Promise.race([
+      this.waitForElement(this.profileButton, 15000),
+      this.waitForElement(this.welcomeText, 15000),
+      this.waitForElement(this.usersMenuItem, 15000)
+    ])
+    
+    console.log('Dashboard page loaded successfully')
   }
 
   async openUsersList() {
+    console.log('Opening Users list...')
     await this.click(this.usersMenuItem)
     await this.waitForPageLoad()
+    await this.helpers.diagnosePageState(this.page, 'After opening Users')
   }
 
   async openStatusesList() {
+    console.log('Opening Statuses list...')
     await this.click(this.statusesMenuItem)
     await this.waitForPageLoad()
+    await this.helpers.diagnosePageState(this.page, 'After opening Statuses')
   }
 
   async openLabelsList() {
+    console.log('Opening Labels list...')
     await this.click(this.labelsMenuItem)
     await this.waitForPageLoad()
+    await this.helpers.diagnosePageState(this.page, 'After opening Labels')
   }
 
   async openTasksList() {
+    console.log('Opening Tasks list...')
     await this.click(this.tasksMenuItem)
     await this.waitForPageLoad()
+    await this.helpers.diagnosePageState(this.page, 'After opening Tasks')
   }
 
   async verifyDashboardElements() {
@@ -42,6 +58,12 @@ class DashboardPage extends BasePage {
     await this.waitForElement(this.statusesMenuItem)
     await this.waitForElement(this.labelsMenuItem)
     await this.waitForElement(this.tasksMenuItem)
+    console.log('All dashboard elements are visible')
+  }
+
+  async logout() {
+    console.log('Logging out from dashboard...')
+    await this.helpers.logout(this.page)
   }
 }
 

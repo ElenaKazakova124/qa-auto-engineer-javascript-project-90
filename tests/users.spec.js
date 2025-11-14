@@ -1,7 +1,8 @@
-import { test } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import LoginPage from './pages/LoginPage.js'
 import DashboardPage from './pages/DashboardPage.js'
 import UsersPage from './pages/UsersPage.js'
+import Helpers from './utils/helpers.js'
 
 test.describe('Пользователи', () => {
   let loginPage, dashboardPage, usersPage
@@ -18,28 +19,28 @@ test.describe('Пользователи', () => {
     await usersPage.waitForPageLoaded()
   })
 
-  test('создание пользователя', async () => {
-    const email = usersPage.helpers.generateEmail()
+  test('создание пользователя', async ({ page }) => {
+    const email = Helpers.generateEmail()
     await usersPage.createUser(email, 'Test', 'User')
-    await usersPage.shouldSee(email)
+    await expect(page.getByText(email)).toBeVisible({ timeout: 10000 })
   })
 
-  test('редактирование пользователя', async () => {
-    const oldEmail = usersPage.helpers.generateEmail()
-    const newEmail = usersPage.helpers.generateEmail()
+  test('редактирование пользователя', async ({ page }) => {
+    const oldEmail = Helpers.generateEmail()
+    const newEmail = Helpers.generateEmail()
     
     await usersPage.createUser(oldEmail, 'Old', 'Name')
     await usersPage.editUser(oldEmail, newEmail, 'New', 'Name')
-    await usersPage.shouldSee(newEmail)
-    await usersPage.shouldNotSee(oldEmail)
+    await expect(page.getByText(newEmail)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(oldEmail)).not.toBeVisible({ timeout: 5000 })
   })
 
-  test('удаление пользователя', async () => {
-    const email = usersPage.helpers.generateEmail()
+  test('удаление пользователя', async ({ page }) => {
+    const email = Helpers.generateEmail()
     
     await usersPage.createUser(email, 'Delete', 'User')
-    await usersPage.shouldSee(email)
+    await expect(page.getByText(email)).toBeVisible({ timeout: 10000 })
     await usersPage.deleteUser(email)
-    await usersPage.shouldNotSee(email)
+    await expect(page.getByText(email)).not.toBeVisible({ timeout: 5000 })
   })
 })
