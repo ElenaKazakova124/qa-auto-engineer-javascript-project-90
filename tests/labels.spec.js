@@ -1,4 +1,4 @@
-import { test } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import LoginPage from './pages/LoginPage.js'
 import DashboardPage from './pages/DashboardPage.js'
 import LabelsPage from './pages/LabelsPage.js'
@@ -15,6 +15,11 @@ test.describe('Метки', () => {
     await loginPage.login('admin', 'admin')
     await dashboardPage.waitForPageLoaded()
     await dashboardPage.openLabelsList()
+    
+    await page.waitForLoadState('networkidle')
+    
+    console.log('URL после навигации на Labels:', page.url())
+    
     await labelsPage.waitForPageLoaded()
   })
 

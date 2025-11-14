@@ -1,4 +1,3 @@
-// tests/pages/LoginPage.js
 import BasePage from './BasePage.js'
 
 class LoginPage extends BasePage {
@@ -10,7 +9,7 @@ class LoginPage extends BasePage {
   }
 
   async goto() {
-    await this.page.goto('/')
+    await this.page.goto('http://localhost:5173') 
     await this.waitForPageLoad()
     await this.waitForPageLoaded()
   }

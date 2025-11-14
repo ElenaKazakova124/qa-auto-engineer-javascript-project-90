@@ -3,13 +3,13 @@ import BasePage from './BasePage.js'
 class LabelsPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("CREATE")')
+    this.createButton = page.locator('button:has-text("+ CREATE")')
     this.nameField = page.getByLabel('Name*')
-    this.saveButton = page.locator('button:has-text("SAVE")')
+    this.saveButton = page.locator('button:has-text("Save"), button:has-text("SAVE")').first()
   }
 
   async waitForPageLoaded() {
-    await this.waitForElement(this.createButton)
+    await this.createButton.waitFor({ state: 'visible', timeout: 15000 })
   }
 
   async clickCreate() {

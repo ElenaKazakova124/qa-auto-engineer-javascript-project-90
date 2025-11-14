@@ -8,6 +8,7 @@ class DashboardPage extends BasePage {
     this.statusesMenuItem = page.getByRole('menuitem', { name: 'Task statuses' })
     this.labelsMenuItem = page.getByRole('menuitem', { name: 'Labels' })
     this.tasksMenuItem = page.getByRole('menuitem', { name: 'Tasks' })
+    this.welcomeText = page.getByText('Welcome')
   }
 
   async waitForPageLoaded() {
@@ -36,7 +37,11 @@ class DashboardPage extends BasePage {
 
   async verifyDashboardElements() {
     await this.waitForElement(this.profileButton)
-    await this.shouldSee('Welcome')
+    await this.waitForElement(this.welcomeText)
+    await this.waitForElement(this.usersMenuItem)
+    await this.waitForElement(this.statusesMenuItem)
+    await this.waitForElement(this.labelsMenuItem)
+    await this.waitForElement(this.tasksMenuItem)
   }
 }
 

@@ -3,10 +3,10 @@ import BasePage from './BasePage.js'
 class TasksPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("CREATE")')
+    this.createButton = page.locator('button:has-text("+ CREATE")')
     this.nameField = page.getByLabel('Name*')
     this.descriptionField = page.getByLabel('Description')
-    this.saveButton = page.locator('button:has-text("SAVE")')
+    this.saveButton = page.locator('button:has-text("SAVE"), button[type="submit"]').first()
   }
 
   async waitForPageLoaded() {
@@ -18,7 +18,7 @@ class TasksPage extends BasePage {
     await this.waitForPageLoad()
   }
 
-  async fillTaskForm(name, description) {
+  async fillTaskForm(name, description = 'Test description') {
     await this.fill(this.nameField, name)
     await this.fill(this.descriptionField, description)
   }

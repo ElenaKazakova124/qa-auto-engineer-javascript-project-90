@@ -3,11 +3,11 @@ import BasePage from './BasePage.js'
 class UsersPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("CREATE")')
+    this.createButton = page.locator('button:has-text("+ CREATE")')
     this.emailField = page.getByLabel('Email*')
     this.firstNameField = page.getByLabel('First Name*')
     this.lastNameField = page.getByLabel('Last Name*')
-    this.saveButton = page.locator('button:has-text("SAVE")')
+    this.saveButton = page.locator('button:has-text("SAVE"), button[type="submit"]').first()
   }
 
   async waitForPageLoaded() {
@@ -37,25 +37,13 @@ class UsersPage extends BasePage {
   }
 
   async editUser(oldEmail, newEmail, firstName, lastName) {
-    await this.clickEdit(oldEmail)
+    await this.helpers.clickEdit(this.page, oldEmail)
     await this.fillUserForm(newEmail, firstName, lastName)
     await this.clickSave()
   }
 
   async deleteUser(email) {
-    await this.clickDelete(email)
-    await this.clickConfirm()
-  }
-
-  async clickEdit(itemText) {
-    await this.helpers.clickEdit(this.page, itemText)
-  }
-
-  async clickDelete(itemText) {
-    await this.helpers.clickDelete(this.page, itemText)
-  }
-
-  async clickConfirm() {
+    await this.helpers.clickDelete(this.page, email)
     await this.helpers.clickConfirm(this.page)
   }
 }

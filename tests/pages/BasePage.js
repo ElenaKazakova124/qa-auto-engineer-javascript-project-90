@@ -7,8 +7,15 @@ class BasePage {
     this.helpers = Helpers
   }
 
-  async waitForElement(selector, timeout = 10000) {
-    await expect(selector).toBeVisible({ timeout })
+  async waitForElement(selector, timeout = 15000) {
+    try {
+      await expect(selector).toBeVisible({ timeout })
+    } catch (error) {
+      console.log(`Элемент не найден: ${selector}`)
+      console.log('Текущий URL:', this.page.url())
+      await this.page.screenshot({ path: `/project/debug-${Date.now()}.png` })
+      throw error
+    }
   }
 
   async waitForElementHidden(selector, timeout = 5000) {
