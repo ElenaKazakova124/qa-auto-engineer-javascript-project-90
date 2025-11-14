@@ -10,20 +10,25 @@ class LoginPage extends BasePage {
 
   async goto() {
     await this.page.goto('http://localhost:5173') 
-    await this.waitForPageLoad()
-    await this.waitForPageLoaded()
+    await this.page.waitForLoadState('networkidle')
   }
 
   async waitForPageLoaded() {
-    await this.waitForElement(this.usernameField, 10000)
+    await Promise.race([
+      this.usernameField.waitFor({ state: 'visible', timeout: 10000 }),
+      this.passwordField.waitFor({ state: 'visible', timeout: 10000 }),
+      this.signInButton.waitFor({ state: 'visible', timeout: 10000 })
+    ])
   }
 
   async login(username = 'admin', password = 'admin') {
+    await this.waitForPageLoaded()
     await this.fill(this.usernameField, username)
     await this.fill(this.passwordField, password)
     await this.click(this.signInButton)
-    await this.waitForPageLoad()
+    await this.page.waitForLoadState('networkidle')
   }
 }
 
+export default LoginPage
 export default LoginPage

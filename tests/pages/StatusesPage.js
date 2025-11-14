@@ -4,8 +4,8 @@ class StatusesPage extends BasePage {
   constructor(page) {
     super(page)
     this.createButton = page.locator('button:has-text("+ CREATE")')
-    this.nameField = page.getByLabel('Name*')
-    this.slugField = page.getByLabel('Slug*')
+    this.nameField = page.getByLabel('Name *')
+    this.slugField = page.getByLabel('Slug *')
     this.saveButton = page.locator('button:has-text("SAVE")')
     this.pageTitle = page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Task statuses?/i })
   }

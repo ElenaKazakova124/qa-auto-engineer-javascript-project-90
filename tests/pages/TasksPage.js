@@ -4,10 +4,10 @@ class TasksPage extends BasePage {
   constructor(page) {
     super(page)
     this.createButton = page.locator('button:has-text("+ CREATE")')
-    this.assigneeField = page.getByLabel('Assignee*')
-    this.titleField = page.getByLabel('Title*')
+    this.assigneeField = page.getByLabel('Assignee *')
+    this.titleField = page.getByLabel('Title *')
     this.contentField = page.getByLabel('Content')
-    this.statusField = page.getByLabel('Status*')
+    this.statusField = page.getByLabel('Status *')
     this.labelField = page.getByLabel('Label')
     this.saveButton = page.locator('button:has-text("SAVE")')
     this.pageTitle = page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Tasks?/i })

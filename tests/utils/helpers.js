@@ -9,61 +9,9 @@ class Helpers {
       await page.goto(baseUrl)
       await page.waitForLoadState('networkidle')
       
-      const usernameSelectors = [
-        page.locator('input[name="username"]'),
-        page.getByLabel('Username*'),
-        page.locator('input[placeholder*="Username"]'),
-        page.locator('input[type="text"]').first()
-      ]
-      
-      let usernameField = null
-      for (const selector of usernameSelectors) {
-        if (await selector.isVisible({ timeout: 5000 }).catch(() => false)) {
-          usernameField = selector
-          break
-        }
-      }
-      
-      if (!usernameField) {
-        throw new Error('Username field not found')
-      }
-
-      const passwordSelectors = [
-        page.locator('input[name="password"]'),
-        page.getByLabel('Password*'),
-        page.locator('input[placeholder*="Password"]'),
-        page.locator('input[type="password"]').first()
-      ]
-      
-      let passwordField = null
-      for (const selector of passwordSelectors) {
-        if (await selector.isVisible({ timeout: 5000 }).catch(() => false)) {
-          passwordField = selector
-          break
-        }
-      }
-      
-      if (!passwordField) {
-        throw new Error('Password field not found')
-      }
-
-      const buttonSelectors = [
-        page.getByRole('button', { name: 'Sign in' }),
-        page.locator('button:has-text("Sign in")'),
-        page.locator('button[type="submit"]')
-      ]
-      
-      let signInButton = null
-      for (const selector of buttonSelectors) {
-        if (await selector.isVisible({ timeout: 5000 }).catch(() => false)) {
-          signInButton = selector
-          break
-        }
-      }
-      
-      if (!signInButton) {
-        throw new Error('Sign in button not found')
-      }
+      const usernameField = page.getByLabel(constants.authElements.usernameLabel)
+      const passwordField = page.getByLabel(constants.authElements.passwordLabel)
+      const signInButton = page.getByRole('button', { name: constants.authElements.signInButton })
 
       await usernameField.fill(username)
       await passwordField.fill(password)
@@ -71,45 +19,10 @@ class Helpers {
       
       await page.waitForLoadState('networkidle')
       
-      // Проверяем успешную авторизацию
-      const profileSelectors = [
-        page.getByRole('button', { name: 'Profile' }),
-        page.locator('button:has-text("Profile")'),
-        page.locator('[class*="Profile"]').first()
-      ]
+      const welcomeText = page.getByText(constants.mainPageElements.welcomeText)
+      await expect(welcomeText).toBeVisible({ timeout: 15000 })
       
-      let profileButton = null
-      for (const selector of profileSelectors) {
-        if (await selector.isVisible({ timeout: 15000 }).catch(() => false)) {
-          profileButton = selector
-          break
-        }
-      }
-      
-      if (!profileButton) {
-        const dashboardElements = [
-          page.getByText('Welcome'),
-          page.getByRole('menuitem', { name: 'Users' }),
-          page.getByRole('menuitem', { name: 'Task statuses' })
-        ]
-        
-        let dashboardElement = null
-        for (const element of dashboardElements) {
-          if (await element.isVisible({ timeout: 5000 }).catch(() => false)) {
-            dashboardElement = element
-            break
-          }
-        }
-        
-        if (!dashboardElement) {
-          throw new Error('Login successful but neither profile button nor dashboard elements found')
-        }
-        console.log('✅ Login successful - dashboard detected')
-        return
-      }
-      
-      await expect(profileButton).toBeVisible()
-      console.log('✅ Login successful - profile button found')
+      console.log('✅ Login successful - welcome text found')
       
     } catch (error) {
       const pageContent = await page.content().catch(() => 'Could not get page content')
@@ -120,67 +33,17 @@ class Helpers {
 
   static async logout(page) {
     try {
-      const profileSelectors = [
-        page.getByRole('button', { name: 'Profile' }),
-        page.locator('button:has-text("Profile")'),
-        page.locator('[class*="Profile"]').first()
-      ]
-      
-      let profileButton = null
-      for (const selector of profileSelectors) {
-        if (await selector.isVisible({ timeout: 10000 }).catch(() => false)) {
-          profileButton = selector
-          break
-        }
-      }
-      
-      if (!profileButton) {
-        throw new Error('Profile button not found for logout')
-      }
-      
+      const profileButton = page.getByRole('button', { name: constants.mainPageElements.profileButtonLabel })
       await profileButton.click()
       
-      const logoutSelectors = [
-        page.getByRole('menuitem', { name: 'Logout' }),
-        page.locator('button:has-text("Logout")'),
-        page.locator('li:has-text("Logout")')
-      ]
-      
-      let logoutButton = null
-      for (const selector of logoutSelectors) {
-        if (await selector.isVisible({ timeout: 5000 }).catch(() => false)) {
-          logoutButton = selector
-          break
-        }
-      }
-      
-      if (!logoutButton) {
-        throw new Error('Logout button not found')
-      }
-      
+      const logoutButton = page.getByRole('menuitem', { name: constants.mainPageElements.logoutButtonLabel })
       await logoutButton.click()
+      
       await page.waitForLoadState('networkidle')
       
-      // Проверяем, что вернулись на страницу логина
-      const signInSelectors = [
-        page.getByRole('button', { name: 'Sign in' }),
-        page.locator('button:has-text("Sign in")'),
-        page.locator('input[name="username"]')
-      ]
+      const signInButton = page.getByRole('button', { name: constants.authElements.signInButton })
+      await expect(signInButton).toBeVisible({ timeout: 10000 })
       
-      let signInElement = null
-      for (const selector of signInSelectors) {
-        if (await selector.isVisible({ timeout: 10000 }).catch(() => false)) {
-          signInElement = selector
-          break
-        }
-      }
-      
-      if (!signInElement) {
-        throw new Error('Sign in elements not found after logout')
-      }
-      
-      await expect(signInElement).toBeVisible()
       console.log('✅ Logout successful')
     } catch (error) {
       throw new Error(`Logout failed: ${error.message}`)
@@ -190,10 +53,10 @@ class Helpers {
   // НАВИГАЦИЯ 
   static async navigateTo(page, section) {
     const sections = {
-      users: 'Users',
-      statuses: 'Task statuses',
-      labels: 'Labels',
-      tasks: 'Tasks'
+      users: constants.mainPageElements.usersMenuItemLabel,
+      statuses: constants.mainPageElements.statusMenuItemLabel,
+      labels: constants.mainPageElements.labelMenuItemLabel,
+      tasks: constants.mainPageElements.tasksMenuItemLabel
     }
     
     if (!sections[section]) {
@@ -205,9 +68,6 @@ class Helpers {
     const menuItem = page.getByRole('menuitem', { name: sections[section] })
     await menuItem.click()
     await page.waitForLoadState('networkidle')
-    
-    // Ждем загрузки целевой страницы
-    await page.waitForTimeout(2000)
     
     console.log(`✅ Navigation to ${section} completed`)
   }
@@ -233,30 +93,15 @@ class Helpers {
   static async clickCreate(page) {
     console.log('Looking for CREATE button...')
     
-    const createSelectors = [
-      page.locator('button:has-text("+ CREATE")'),
-      page.locator('button:has-text("CREATE")'),
-      page.locator('button:has-text("Create")'),
-      page.locator('button:has-text("+ Create")'),
-      page.locator('[aria-label*="create"]'),
-      page.locator('[aria-label*="add"]'),
-      page.locator('[aria-label*="new"]'),
-      page.getByRole('button', { name: '+ CREATE' }),
-      page.getByRole('button', { name: 'CREATE' }),
-      page.getByRole('button', { name: 'Create' })
-    ]
+    const createButton = page.locator(`button:has-text("${constants.tableElements.createButton}")`)
     
-    for (const selector of createSelectors) {
-      const isVisible = await selector.isVisible({ timeout: 5000 }).catch(() => false)
-      if (isVisible) {
-        console.log(`✅ Found CREATE button with selector: ${selector}`)
-        await selector.click()
-        await page.waitForLoadState('networkidle')
-        return
-      }
+    if (await createButton.isVisible({ timeout: 5000 })) {
+      console.log('✅ Found CREATE button')
+      await createButton.click()
+      await page.waitForLoadState('networkidle')
+      return
     }
     
-    // Если кнопка не найдена, выведем отладочную информацию
     console.log('❌ CREATE button not found. Debug info:')
     const buttons = await page.$$('button')
     console.log(`Total buttons on page: ${buttons.length}`)
@@ -264,28 +109,19 @@ class Helpers {
     for (let i = 0; i < buttons.length; i++) {
       const button = buttons[i]
       const text = await button.textContent()
-      const ariaLabel = await button.getAttribute('aria-label')
-      console.log(`Button ${i}: text="${text?.trim()}", aria-label="${ariaLabel}"`)
+      console.log(`Button ${i}: "${text?.trim()}"`)
     }
     
     throw new Error('Create button not found')
   }
 
   static async clickSave(page) {
-    const saveSelectors = [
-      page.locator('button:has-text("SAVE")'),
-      page.locator('button:has-text("Save")'),
-      page.locator('button[type="submit"]'),
-      page.getByRole('button', { name: 'SAVE' }),
-      page.getByRole('button', { name: 'Save' })
-    ]
+    const saveButton = page.locator(`button:has-text("${constants.tableElements.saveButton}")`)
     
-    for (const selector of saveSelectors) {
-      if (await selector.isVisible({ timeout: 10000 }).catch(() => false)) {
-        await selector.click()
-        await page.waitForLoadState('networkidle')
-        return
-      }
+    if (await saveButton.isVisible({ timeout: 10000 })) {
+      await saveButton.click()
+      await page.waitForLoadState('networkidle')
+      return
     }
     throw new Error('Save button not found')
   }
@@ -309,55 +145,36 @@ class Helpers {
 
   static async clickEdit(page, itemText) {
     const row = page.locator('tr', { has: page.getByText(itemText) })
-    const editSelectors = [
-      row.getByRole('button', { name: 'Edit' }),
-      row.getByRole('button', { name: 'EDIT' }),
-      row.locator('button:has-text("Edit")'),
-      row.locator('button:has-text("EDIT")')
-    ]
+    const editButton = row.locator(`button:has-text("${constants.tableElements.editButton}")`)
     
-    for (const selector of editSelectors) {
-      if (await selector.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await selector.first().click()
-        await page.waitForLoadState('networkidle')
-        return
-      }
+    if (await editButton.isVisible({ timeout: 5000 })) {
+      await editButton.click()
+      await page.waitForLoadState('networkidle')
+      return
     }
     throw new Error(`Edit button not found for item: ${itemText}`)
   }
 
   static async clickDelete(page, itemText) {
     const row = page.locator('tr', { has: page.getByText(itemText) })
-    const deleteSelectors = [
-      row.getByRole('button', { name: 'Delete' }),
-      row.locator('button:has-text("Delete")')
-    ]
+    const deleteButton = row.locator(`button:has-text("${constants.tableElements.deleteButton}")`)
     
-    for (const selector of deleteSelectors) {
-      if (await selector.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await selector.click()
-        await page.waitForLoadState('networkidle')
-        return
-      }
+    if (await deleteButton.isVisible({ timeout: 5000 })) {
+      await deleteButton.click()
+      await page.waitForLoadState('networkidle')
+      return
     }
     throw new Error(`Delete button not found for item: ${itemText}`)
   }
 
   static async clickShow(page, itemText) {
     const row = page.locator('tr', { has: page.getByText(itemText) })
-    const showSelectors = [
-      row.getByRole('button', { name: 'Show' }),
-      row.getByRole('button', { name: 'SHOW' }),
-      row.locator('button:has-text("Show")'),
-      row.locator('button:has-text("SHOW")')
-    ]
+    const showButton = row.locator(`button:has-text("${constants.tableElements.showButton}")`)
     
-    for (const selector of showSelectors) {
-      if (await selector.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await selector.first().click()
-        await page.waitForLoadState('networkidle')
-        return
-      }
+    if (await showButton.isVisible({ timeout: 5000 })) {
+      await showButton.click()
+      await page.waitForLoadState('networkidle')
+      return
     }
     throw new Error(`Show button not found for item: ${itemText}`)
   }
@@ -388,80 +205,6 @@ class Helpers {
     await expect(page.getByText(text)).not.toBeVisible({ timeout: 5000 })
   }
 
-  // ФИЛЬТРАЦИЯ 
-  static async filterByAssignee(page, assignee) {
-    await page.locator('input[placeholder*="Assignee"]').first().click()
-    await page.getByRole('option', { name: assignee }).click()
-    await page.waitForLoadState('networkidle')
-  }
-
-  static async filterByStatus(page, status) {
-    await page.locator('input[placeholder*="Status"]').first().click()
-    await page.getByRole('option', { name: status }).click()
-    await page.waitForLoadState('networkidle')
-  }
-
-  static async filterByLabel(page, label) {
-    await page.locator('input[placeholder*="Label"]').first().click()
-    await page.getByRole('option', { name: label }).click()
-    await page.waitForLoadState('networkidle')
-  }
-
-  static async clearFilters(page) {
-    const filters = [
-      'input[placeholder*="Assignee"]',
-      'input[placeholder*="Status"]',
-      'input[placeholder*="Label"]'
-    ]
-    
-    for (const filter of filters) {
-      const filterElement = page.locator(filter).first()
-      if (await filterElement.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await filterElement.click()
-        await page.keyboard.press('Escape')
-      }
-    }
-    
-    const search = page.getByPlaceholder('Search...')
-    if (await search.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await search.clear()
-    }
-    
-    await page.waitForLoadState('networkidle')
-  }
-
-  // МАССОВЫЕ ОПЕРАЦИИ 
-  static async selectAll(page) {
-    const checkbox = page.locator('thead input[type="checkbox"]')
-    if (await checkbox.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await checkbox.check()
-    }
-  }
-
-  static async selectItem(page, itemText) {
-    const row = page.locator('tr', { has: page.getByText(itemText) })
-    const checkbox = row.locator('input[type="checkbox"]')
-    if (await checkbox.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await checkbox.check()
-    }
-  }
-
-  static async clickBulkDelete(page) {
-    const deleteSelectors = [
-      page.locator('button:has-text("Delete")'),
-      page.getByRole('button', { name: 'Delete' })
-    ]
-    
-    for (const selector of deleteSelectors) {
-      if (await selector.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await selector.click()
-        await page.waitForLoadState('networkidle')
-        return
-      }
-    }
-    throw new Error('Bulk delete button not found')
-  }
-
   // УТИЛИТЫ 
   static async waitForTimeout(page, ms = 1000) {
     await page.waitForTimeout(ms)
@@ -476,56 +219,22 @@ class Helpers {
     await page.waitForLoadState('domcontentloaded')
   }
 
-  // ОТЛАДОЧНЫЕ МЕТОДЫ
-  static async debugPage(page, description = '') {
-    console.log(`=== DEBUG: ${description} ===`)
-    console.log('URL:', page.url())
-    console.log('Title:', await page.title())
-    
-    const visibleButtons = await page.$$eval('button', buttons => 
-      buttons.map(btn => btn.textContent?.trim()).filter(Boolean)
-    )
-    console.log('Visible buttons:', visibleButtons.slice(0, 10))
-    
-    const visibleInputs = await page.$$eval('input', inputs => 
-      inputs.map(input => ({
-        name: input.name,
-        type: input.type,
-        placeholder: input.placeholder,
-        id: input.id
-      }))
-    )
-    console.log('Visible inputs:', visibleInputs.slice(0, 5))
-  }
-
   // ДИАГНОСТИКА СОСТОЯНИЯ СТРАНИЦЫ
   static async diagnosePageState(page, pageName = 'unknown') {
     console.log(`\n=== DIAGNOSIS FOR: ${pageName} ===`)
     console.log('Current URL:', page.url())
     
-    // Проверяем наличие основных элементов
     const profileButton = await page.getByRole('button', { name: 'Profile' }).isVisible().catch(() => false)
     console.log(`Profile button visible: ${profileButton}`)
     
-    // Проверяем наличие кнопки CREATE
-    const createButtons = [
-      'button:has-text("+ CREATE")',
-      'button:has-text("CREATE")',
-      'button:has-text("Create")'
-    ]
+    const createButton = page.locator(`button:has-text("${constants.tableElements.createButton}")`)
+    const createCount = await createButton.count()
+    const createVisible = await createButton.isVisible().catch(() => false)
+    console.log(`CREATE button: count=${createCount}, visible=${createVisible}`)
     
-    for (const selector of createButtons) {
-      const element = page.locator(selector)
-      const count = await element.count()
-      const visible = await element.isVisible().catch(() => false)
-      console.log(`Selector "${selector}": count=${count}, visible=${visible}`)
-    }
-    
-    // Проверяем наличие таблицы
     const tableRows = await page.locator('tbody tr').count()
     console.log(`Table rows: ${tableRows}`)
     
-    // Проверяем наличие заголовка страницы
     const headings = await page.$$eval('h1, h2, h3, h4, h5, h6', elements => 
       elements.map(el => ({ tag: el.tagName, text: el.textContent?.trim() }))
     )
