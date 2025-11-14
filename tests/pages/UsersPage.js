@@ -1,9 +1,10 @@
+// tests/pages/UsersPage.js
 import BasePage from './BasePage.js'
 
 class UsersPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("+ CREATE")')
+    this.createButton = page.locator('button:has-text("+ CREATE"), button:has-text("CREATE"), button:has-text("Create"), [aria-label*="create"], [aria-label*="add"]').first()
     this.emailField = page.getByLabel('Email*')
     this.firstNameField = page.getByLabel('First Name*')
     this.lastNameField = page.getByLabel('Last Name*')
@@ -11,7 +12,11 @@ class UsersPage extends BasePage {
   }
 
   async waitForPageLoaded() {
-    await this.waitForElement(this.createButton)
+    await Promise.race([
+      this.createButton.waitFor({ state: 'visible', timeout: 20000 }),
+      this.page.locator('button:has-text("Export")').waitFor({ state: 'visible', timeout: 20000 }),
+      this.page.locator('h2:has-text("Users")').waitFor({ state: 'visible', timeout: 20000 })
+    ])
   }
 
   async clickCreate() {

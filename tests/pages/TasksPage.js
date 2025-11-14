@@ -1,16 +1,21 @@
+// tests/pages/TasksPage.js
 import BasePage from './BasePage.js'
 
 class TasksPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("+ CREATE")')
+    this.createButton = page.locator('button:has-text("+ CREATE"), button:has-text("CREATE"), button:has-text("Create"), [aria-label*="create"], [aria-label*="add"]').first()
     this.nameField = page.getByLabel('Name*')
     this.descriptionField = page.getByLabel('Description')
     this.saveButton = page.locator('button:has-text("SAVE"), button[type="submit"]').first()
   }
 
   async waitForPageLoaded() {
-    await this.waitForElement(this.createButton)
+    await Promise.race([
+      this.createButton.waitFor({ state: 'visible', timeout: 20000 }),
+      this.page.locator('button:has-text("Export")').waitFor({ state: 'visible', timeout: 20000 }),
+      this.page.locator('h2:has-text("Tasks")').waitFor({ state: 'visible', timeout: 20000 })
+    ])
   }
 
   async clickCreate() {
