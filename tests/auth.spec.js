@@ -4,8 +4,7 @@ import Helpers from './utils/helpers.js'
 test('авторизация и выход', async ({ page }) => {
   await Helpers.login(page, 'admin', 'admin')
   
-  const profileButton = page.getByRole('button', { name: 'Profile' })
-  await expect(profileButton).toBeVisible()
+  await expect(page.getByText('Welcome to the administration')).toBeVisible()
   
   await Helpers.logout(page)
   

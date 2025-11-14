@@ -3,27 +3,23 @@ import BasePage from './BasePage.js'
 class UsersPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("Create")')
-    this.emailField = page.getByLabel('Email')
-    this.firstNameField = page.getByLabel('First Name')
-    this.lastNameField = page.getByLabel('Last Name')
-    this.saveButton = page.locator('button:has-text("Save")')
-    this.pageTitle = page.locator('h1, h2, h3').filter({ hasText: /Users?/i })
+    this.createButton = page.locator('button:has-text("+ CREATE")')
+    this.emailField = page.getByLabel('Email*')
+    this.firstNameField = page.getByLabel('First name*')
+    this.lastNameField = page.getByLabel('Last name*')
+    this.saveButton = page.locator('button:has-text("SAVE")')
+    this.pageTitle = page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Users?/i })
   }
 
   async waitForPageLoaded() {
-    await this.helpers.diagnosePageState(this.page, 'UsersPage')
-    
-    await Promise.race([
-      this.pageTitle.waitFor({ state: 'visible', timeout: 15000 }),
-      this.createButton.waitFor({ state: 'visible', timeout: 15000 }),
-      this.page.locator('button:has-text("Export")').waitFor({ state: 'visible', timeout: 15000 })
-    ])
+    await this.waitForElement(this.pageTitle, 15000)
+    await this.waitForElement(this.createButton, 10000)
   }
 
   async openCreateForm() {
     console.log('Opening create form for users...')
-    await this.helpers.clickCreate(this.page)
+    await this.click(this.createButton)
+    await this.waitForModal()
     await this.waitForElement(this.emailField, 10000)
   }
 
@@ -34,7 +30,7 @@ class UsersPage extends BasePage {
   }
 
   async saveForm() {
-    await this.helpers.clickSave(this.page)
+    await this.click(this.saveButton)
   }
 
   async createUser(email, firstName, lastName) {
@@ -43,15 +39,17 @@ class UsersPage extends BasePage {
     await this.saveForm()
   }
 
-  async editUser(oldEmail, newEmail, firstName, lastName) {
-    await this.helpers.clickEdit(this.page, oldEmail)
-    await this.fillUserForm(newEmail, firstName, lastName)
-    await this.saveForm()
+  async clickEdit(userEmail) {
+    const userRow = this.page.locator('tr', { has: this.page.getByText(userEmail) })
+    const editButton = userRow.locator('button:has-text("EDIT")')
+    await this.click(editButton)
+    await this.waitForModal()
   }
 
-  async deleteUser(email) {
-    await this.helpers.clickDelete(this.page, email)
-    await this.helpers.clickConfirm(this.page)
+  async clickDelete(userEmail) {
+    const userRow = this.page.locator('tr', { has: this.page.getByText(userEmail) })
+    const deleteButton = userRow.locator('button:has-text("DELETE")')
+    await this.click(deleteButton)
   }
 }
 

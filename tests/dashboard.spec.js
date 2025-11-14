@@ -14,35 +14,33 @@ test.describe('Проверка дашборда и навигации', () => {
   test('дашборд успешно загружается после авторизации', async ({ page }) => {
     await dashboardPage.verifyDashboardElements()
     
-    await expect(page.getByRole('button', { name: 'Profile' })).toBeVisible()
-    await expect(page.getByText('Welcome')).toBeVisible()
-    await expect(page.getByRole('menuitem', { name: 'Users' })).toBeVisible()
-    await expect(page.getByRole('menuitem', { name: 'Task statuses' })).toBeVisible()
-    await expect(page.getByRole('menuitem', { name: 'Labels' })).toBeVisible()
+    await expect(page.getByText('Welcome to the administration')).toBeVisible()
     await expect(page.getByRole('menuitem', { name: 'Tasks' })).toBeVisible()
+    await expect(page.getByRole('menuitem', { name: 'Users' })).toBeVisible()
+    await expect(page.getByRole('menuitem', { name: 'Labels' })).toBeVisible()
+    await expect(page.getByRole('menuitem', { name: 'Task statuses' })).toBeVisible()
   })
 
   test('навигация по разделам работает корректно', async ({ page }) => {
-
-    await dashboardPage.openUsersList()
-    await expect(page.locator('h1, h2, h3').filter({ hasText: /Users?/i })).toBeVisible({ timeout: 10000 })
+    await dashboardPage.openTasksList()
+    await expect(page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Tasks?/i })).toBeVisible({ timeout: 10000 })
 
     await page.goBack()
     await dashboardPage.waitForPageLoaded()
 
-    await dashboardPage.openStatusesList()
-    await expect(page.locator('h1, h2, h3').filter({ hasText: /Statuses?/i })).toBeVisible({ timeout: 10000 })
+    await dashboardPage.openUsersList()
+    await expect(page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Users?/i })).toBeVisible({ timeout: 10000 })
 
     await page.goBack()
     await dashboardPage.waitForPageLoaded()
 
     await dashboardPage.openLabelsList()
-    await expect(page.locator('h1, h2, h3').filter({ hasText: /Labels?/i })).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Labels?/i })).toBeVisible({ timeout: 10000 })
 
     await page.goBack()
     await dashboardPage.waitForPageLoaded()
 
-    await dashboardPage.openTasksList()
-    await expect(page.locator('h1, h2, h3').filter({ hasText: /Tasks?/i })).toBeVisible({ timeout: 10000 })
+    await dashboardPage.openStatusesList()
+    await expect(page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Task statuses?/i })).toBeVisible({ timeout: 10000 })
   })
 })

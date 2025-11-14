@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test'
-import Helpers from '../utils/helpers.js' 
+import Helpers from '../utils/helpers.js'
 
 class BasePage {
   constructor(page) {
@@ -38,6 +38,24 @@ class BasePage {
 
   async waitForPageLoad() {
     await this.page.waitForLoadState('networkidle')
+  }
+
+  async waitForModal() {
+    await Promise.race([
+      this.page.waitForSelector('[role="dialog"]', { timeout: 10000 }),
+      this.page.waitForSelector('.MuiDialog-root', { timeout: 10000 }),
+      this.page.waitForSelector('form', { timeout: 10000 }),
+      this.page.waitForSelector('.modal', { timeout: 10000 })
+    ])
+    await this.page.waitForTimeout(500)
+  }
+
+  async shouldSee(text) {
+    await this.helpers.shouldSee(this.page, text)
+  }
+
+  async shouldNotSee(text) {
+    await this.helpers.shouldNotSee(this.page, text)
   }
 }
 

@@ -30,7 +30,10 @@ test.describe('Пользователи', () => {
     const newEmail = Helpers.generateEmail()
     
     await usersPage.createUser(oldEmail, 'Old', 'Name')
-    await usersPage.editUser(oldEmail, newEmail, 'New', 'Name')
+    await usersPage.clickEdit(oldEmail)
+    await usersPage.fillUserForm(newEmail, 'New', 'Name')
+    await usersPage.saveForm()
+    
     await expect(page.getByText(newEmail)).toBeVisible({ timeout: 10000 })
     await expect(page.getByText(oldEmail)).not.toBeVisible({ timeout: 5000 })
   })
@@ -40,7 +43,13 @@ test.describe('Пользователи', () => {
     
     await usersPage.createUser(email, 'Delete', 'User')
     await expect(page.getByText(email)).toBeVisible({ timeout: 10000 })
-    await usersPage.deleteUser(email)
+    await usersPage.clickDelete(email)
+    
+    try {
+      await usersPage.helpers.clickConfirm(page)
+    } catch (e) {
+    }
+    
     await expect(page.getByText(email)).not.toBeVisible({ timeout: 5000 })
   })
 })

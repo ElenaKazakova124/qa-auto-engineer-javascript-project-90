@@ -5,11 +5,11 @@ test('Приложение успешно рендерится', async ({ page }
   
   await expect(page.locator('body')).not.toBeEmpty()
   
-  const usernameInput = page.locator('input[name="username"]')
-  const profileButton = page.getByRole('button', { name: 'Profile' })
+  const usernameInput = page.getByLabel('Username*')
+  const welcomeText = page.getByText('Welcome to the administration')
   
   const isLoginPage = await usernameInput.isVisible().catch(() => false)
-  const isDashboard = await profileButton.isVisible().catch(() => false)
+  const isDashboard = await welcomeText.isVisible().catch(() => false)
   
   expect(isLoginPage || isDashboard).toBeTruthy()
 })
