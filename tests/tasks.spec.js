@@ -113,12 +113,10 @@ test.describe('Задачи', () => {
     
     await tasksPage.createTask(taskName)
     await tasksPage.clickEdit(taskName)
-    
-    // Редактируем заголовок задачи
+  
     await tasksPage.fill(await tasksPage.titleField, updatedTaskName)
     await tasksPage.saveForm()
     
-    // Проверяем, что задача обновилась
     await expect(page.getByText(updatedTaskName)).toBeVisible({ timeout: 10000 })
     await expect(page.getByText(taskName)).not.toBeVisible({ timeout: 5000 })
   })
@@ -130,7 +128,6 @@ test.describe('Задачи', () => {
     await tasksPage.createTask(taskName, taskDescription)
     await tasksPage.clickShow(taskName)
     
-    // Проверяем, что открылась страница с деталями задачи
     await expect(page.getByText(taskName)).toBeVisible({ timeout: 10000 })
     await expect(page.getByText(taskDescription)).toBeVisible({ timeout: 5000 })
   })
