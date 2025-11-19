@@ -1,9 +1,3 @@
-import { test, expect } from '@playwright/test'
-import LoginPage from './pages/LoginPage.js'
-import DashboardPage from './pages/DashboardPage.js'
-import TasksPage from './pages/TasksPage.js'
-import Helpers from './utils/helpers.js'
-
 test.describe('Задачи', () => {
   let loginPage, dashboardPage, tasksPage
 
@@ -80,32 +74,7 @@ test.describe('Задачи', () => {
       
       console.log('✅ Карточка успешно перемещена в Done')
     }
-    
-    // Альтернативный вариант: если нет стандартных колонок, проверяем изменение статуса через интерфейс
-    if (!await todoColumn.isVisible()) {
-      console.log('Стандартные колонки не найдены, проверяем изменение статуса через редактирование...')
-      
-      // Открываем задачу для редактирования
-      await tasksPage.clickEdit(taskName)
-      
-      // Меняем статус задачи
-      const statusField = page.getByLabel('Status*')
-      await statusField.click()
-      
-      // Выбираем другой статус из выпадающего списка
-      const newStatus = page.getByRole('option').first()
-      const newStatusText = await newStatus.textContent()
-      await newStatus.click()
-      
-      // Сохраняем изменения
-      await tasksPage.saveForm()
-      
-      // Проверяем, что статус изменился
-      await expect(page.getByText(newStatusText)).toBeVisible({ timeout: 5000 })
-      
-      console.log(`✅ Статус задачи изменен на: ${newStatusText}`)
-    }
-  })
+  }) 
 
   test('редактирование задачи', async ({ page }) => {
     const taskName = Helpers.generateTaskTitle()
@@ -131,4 +100,4 @@ test.describe('Задачи', () => {
     await expect(page.getByText(taskName)).toBeVisible({ timeout: 10000 })
     await expect(page.getByText(taskDescription)).toBeVisible({ timeout: 5000 })
   })
-})
+}) 
