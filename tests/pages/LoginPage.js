@@ -3,8 +3,8 @@ import BasePage from './BasePage.js'
 class LoginPage extends BasePage {
   constructor(page) {
     super(page)
-    this.usernameField = page.getByLabel('Username*')
-    this.passwordField = page.getByLabel('Password*')
+    this.usernameField = page.getByLabel('Username *')
+    this.passwordField = page.getByLabel('Password *')
     this.signInButton = page.getByRole('button', { name: 'SIGN IN' })
   }
 
