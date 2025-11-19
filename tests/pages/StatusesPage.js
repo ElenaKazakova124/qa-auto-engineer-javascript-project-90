@@ -3,8 +3,8 @@ import BasePage from './BasePage.js'
 class StatusesPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("Create")')
-    this.exportButton = page.locator('button:has-text("Export")')
+    this.createButton = page.locator('span:has-text("Create")')
+    this.exportButton = page.locator('span:has-text("Export")')
     this.nameField = page.getByLabel('Name')
     this.slugField = page.getByLabel('Slug')
     this.saveButton = page.locator('button:has-text("Save")')

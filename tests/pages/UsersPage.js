@@ -3,8 +3,8 @@ import BasePage from './BasePage.js'
 class UsersPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("Create")')
-    this.exportButton = page.locator('button:has-text("Export")')
+    this.createButton = page.locator('span:has-text("Create")')
+    this.exportButton = page.locator('span:has-text("Export")')
     this.emailField = page.getByLabel('Email')
     this.firstNameField = page.getByLabel('First name')
     this.lastNameField = page.getByLabel('Last name')
