@@ -1,3 +1,9 @@
+import { test, expect } from '@playwright/test'
+import LoginPage from './pages/LoginPage.js'
+import DashboardPage from './pages/DashboardPage.js'
+import TasksPage from './pages/TasksPage.js'
+import Helpers from './utils/helpers.js'
+
 test.describe('Задачи', () => {
   let loginPage, dashboardPage, tasksPage
 
@@ -74,7 +80,7 @@ test.describe('Задачи', () => {
       
       console.log('✅ Карточка успешно перемещена в Done')
     }
-  }) 
+  })
 
   test('редактирование задачи', async ({ page }) => {
     const taskName = Helpers.generateTaskTitle()
@@ -100,4 +106,4 @@ test.describe('Задачи', () => {
     await expect(page.getByText(taskName)).toBeVisible({ timeout: 10000 })
     await expect(page.getByText(taskDescription)).toBeVisible({ timeout: 5000 })
   })
-}) 
+})
