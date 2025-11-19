@@ -7,6 +7,6 @@ test('авторизация и выход', async ({ page }) => {
   await expect(page.getByText('Welcome')).toBeVisible()
   await Helpers.logout(page)
   
-  const signInButton = page.getByRole('button', { name: 'SIGN IN' })
+  const signInButton = page.getByRole('button', { name: 'Sign in' })
   await expect(signInButton).toBeVisible()
 })

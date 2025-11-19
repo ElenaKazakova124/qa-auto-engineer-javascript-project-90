@@ -3,16 +3,21 @@ import BasePage from './BasePage.js'
 class StatusesPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("CREATE")')
-    this.nameField = page.getByLabel('Name *')
-    this.slugField = page.getByLabel('Slug *')
-    this.saveButton = page.locator('button:has-text("SAVE")')
-    this.pageTitle = page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Task statuses?/i })
+    this.createButton = page.locator('button:has-text("Create")')
+    this.exportButton = page.locator('button:has-text("Export")')
+    this.nameField = page.getByLabel('Name')
+    this.slugField = page.getByLabel('Slug')
+    this.saveButton = page.locator('button:has-text("Save")')
+    this.pageTitle = page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Statuses?/i })
   }
 
   async waitForPageLoaded() {
-    await this.waitForElement(this.pageTitle, 15000)
-    await this.waitForElement(this.createButton, 10000)
+    await Promise.race([
+      this.pageTitle.waitFor({ state: 'visible', timeout: 15000 }),
+      this.createButton.waitFor({ state: 'visible', timeout: 15000 }),
+      this.exportButton.waitFor({ state: 'visible', timeout: 15000 })
+    ])
+    console.log('Statuses page loaded successfully')
   }
 
   async openCreateForm() {
@@ -35,19 +40,6 @@ class StatusesPage extends BasePage {
     await this.openCreateForm()
     await this.fillStatusForm(name, slug)
     await this.saveForm()
-  }
-
-  async clickEdit(statusName) {
-    const statusRow = this.page.locator('tr', { has: this.page.getByText(statusName) })
-    const editButton = statusRow.locator('button:has-text("EDIT")')
-    await this.click(editButton)
-    await this.waitForModal()
-  }
-
-  async clickDelete(statusName) {
-    const statusRow = this.page.locator('tr', { has: this.page.getByText(statusName) })
-    const deleteButton = statusRow.locator('button:has-text("DELETE")')
-    await this.click(deleteButton)
   }
 }
 

@@ -7,7 +7,7 @@ test('Приложение успешно рендерится', async ({ page }
   
   const usernameInput = page.getByLabel('Username *')
   const passwordInput = page.getByLabel('Password *')
-  const signInButton = page.getByRole('button', { name: 'SIGN IN' })
+  const signInButton = page.getByRole('button', { name: 'Sign in' })
   
   const welcomeText = page.getByText('Welcome')
   const profileButton = page.getByRole('button', { name: 'Profile' })

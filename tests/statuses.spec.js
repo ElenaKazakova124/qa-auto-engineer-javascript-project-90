@@ -23,7 +23,6 @@ test.describe('Статусы', () => {
     const statusName = Helpers.generateName('Status')
     const slug = Helpers.generateSlug()
     await statusesPage.createStatus(statusName, slug)
-    
     await expect(page.getByText(statusName)).toBeVisible({ timeout: 10000 })
   })
 })

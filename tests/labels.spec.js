@@ -22,7 +22,6 @@ test.describe('Метки', () => {
   test('создание метки', async ({ page }) => {
     const labelName = Helpers.generateName('Label')
     await labelsPage.createLabel(labelName)
-    
     await expect(page.getByText(labelName)).toBeVisible({ timeout: 10000 })
   })
 })
