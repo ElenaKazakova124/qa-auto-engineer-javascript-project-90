@@ -1,46 +1,37 @@
-import { test, expect } from '@playwright/test'
-import DashboardPage from './pages/DashboardPage.js'
-import Helpers from './utils/helpers.js'
+import { test, expect } from '@playwright/test';
+import LoginPage from './pages/LoginPage.js';
+import DashboardPage from './pages/DashboardPage.js';
+import constants from './utils/constants.js';
+import helpers from './utils/helpers.js'
 
 test.describe('Проверка дашборда и навигации', () => {
-  let dashboardPage
+  let loginPage;
+  let dashboardPage;
 
   test.beforeEach(async ({ page }) => {
-    await Helpers.login(page, 'admin', 'admin')
-    dashboardPage = new DashboardPage(page)
-    await dashboardPage.waitForPageLoaded()
-  })
+    loginPage = new LoginPage(page);
+    dashboardPage = new DashboardPage(page);
+    await loginPage.login('admin', 'admin');
+  });
 
   test('дашборд успешно загружается после авторизации', async ({ page }) => {
-    await dashboardPage.verifyDashboardElements()
-    
-    await expect(page.getByText('Welcome to the administration')).toBeVisible()
-    await expect(page.getByRole('menuitem', { name: 'Tasks' })).toBeVisible()
-    await expect(page.getByRole('menuitem', { name: 'Users' })).toBeVisible()
-    await expect(page.getByRole('menuitem', { name: 'Labels' })).toBeVisible()
-    await expect(page.getByRole('menuitem', { name: 'Task statuses' })).toBeVisible()
-  })
+    await dashboardPage.waitForDashboard();
+    await helpers.shouldSee(page, constants.mainPageElements.welcomeText);
+  });
 
   test('навигация по разделам работает корректно', async ({ page }) => {
-    await dashboardPage.openTasksList()
-    await expect(page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Tasks?/i })).toBeVisible({ timeout: 10000 })
-
-    await page.goBack()
-    await dashboardPage.waitForPageLoaded()
-
-    await dashboardPage.openUsersList()
-    await expect(page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Users?/i })).toBeVisible({ timeout: 10000 })
-
-    await page.goBack()
-    await dashboardPage.waitForPageLoaded()
-
-    await dashboardPage.openLabelsList()
-    await expect(page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Labels?/i })).toBeVisible({ timeout: 10000 })
-
-    await page.goBack()
-    await dashboardPage.waitForPageLoaded()
-
-    await dashboardPage.openStatusesList()
-    await expect(page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Task statuses?/i })).toBeVisible({ timeout: 10000 })
-  })
-})
+    await dashboardPage.waitForDashboard();
+    
+    await dashboardPage.gotoTasks();
+    await helpers.shouldBeOnPage(page, /.*\/tasks/);
+    
+    await dashboardPage.gotoUsers();
+    await helpers.shouldBeOnPage(page, /.*\/users/);
+    
+    await dashboardPage.gotoLabels();
+    await helpers.shouldBeOnPage(page, /.*\/labels/);
+    
+    await dashboardPage.gotoTaskStatuses();
+    await helpers.shouldBeOnPage(page, /.*\/task_statuses/);
+  });
+});

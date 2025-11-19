@@ -1,33 +1,24 @@
-import BasePage from './BasePage.js'
+import BasePage from './BasePage.js';
+import constants from '../utils/constants.js';
 
 class LoginPage extends BasePage {
   constructor(page) {
-    super(page)
-    this.usernameField = page.getByLabel('Username *')
-    this.passwordField = page.getByLabel('Password *')
-    this.signInButton = page.getByRole('button', { name: 'SIGN IN' })
+    super(page);
+    this.usernameInput = this.page.getByLabel(constants.authElements.usernameLabel);
+    this.passwordInput = this.page.getByLabel(constants.authElements.passwordLabel);
+    this.signInButton = this.page.getByRole('button', { name: constants.authElements.signInButton });
   }
 
   async goto() {
-    await this.page.goto('http://localhost:5173') 
-    await this.page.waitForLoadState('networkidle')
-  }
-
-  async waitForPageLoaded() {
-    await Promise.race([
-      this.usernameField.waitFor({ state: 'visible', timeout: 10000 }),
-      this.passwordField.waitFor({ state: 'visible', timeout: 10000 }),
-      this.signInButton.waitFor({ state: 'visible', timeout: 10000 })
-    ])
+    await this.page.goto('http://localhost:5173/');
   }
 
   async login(username = 'admin', password = 'admin') {
-    await this.waitForPageLoaded()
-    await this.fill(this.usernameField, username)
-    await this.fill(this.passwordField, password)
-    await this.click(this.signInButton)
-    await this.page.waitForLoadState('networkidle')
+    await this.goto();
+    await this.fill(this.usernameInput, username);
+    await this.fill(this.passwordInput, password);
+    await this.click(this.signInButton);
   }
 }
 
-export default LoginPage
+export default LoginPage;

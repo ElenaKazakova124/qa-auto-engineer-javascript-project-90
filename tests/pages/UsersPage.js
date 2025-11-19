@@ -1,48 +1,40 @@
-import BasePage from './BasePage.js'
+import BasePage from './BasePage.js';
+import constants from '../utils/constants.js';
 
 class UsersPage extends BasePage {
   constructor(page) {
-    super(page)
-    this.createButton = page.locator('span:has-text("Create")')
-    this.exportButton = page.locator('span:has-text("Export")')
-    this.emailField = page.getByLabel('Email')
-    this.firstNameField = page.getByLabel('First name')
-    this.lastNameField = page.getByLabel('Last name')
-    this.saveButton = page.locator('button:has-text("Save")')
-    this.pageTitle = page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Users?/i })
+    super(page);
+    this.createButton = this.page.locator(`a:has-text("${constants.tableElements.createButton}")`).first();
+    this.emailInput = this.page.locator('input[name="email"]').first();
+    this.firstNameInput = this.page.locator('input[name="firstName"]').first();
+    this.lastNameInput = this.page.locator('input[name="lastName"]').first();
+    this.saveButton = this.page.locator(`button:has-text("${constants.tableElements.saveButton}")`).first();
+    this.usersLink = this.page.locator(`a:has-text("${constants.mainPageElements.usersMenuItemLabel}")`).first();
   }
 
-  async waitForPageLoaded() {
-    await Promise.race([
-      this.pageTitle.waitFor({ state: 'visible', timeout: 15000 }),
-      this.createButton.waitFor({ state: 'visible', timeout: 15000 }),
-      this.exportButton.waitFor({ state: 'visible', timeout: 15000 })
-    ])
-    console.log('Users page loaded successfully')
+  async goto() {
+    await this.click(this.usersLink);
+    await this.page.waitForURL('**/users');
+    console.log('Users page loaded successfully');
   }
 
   async openCreateForm() {
-    console.log('Opening create form for users...')
-    await this.click(this.createButton)
-    await this.waitForModal()
-    await this.waitForElement(this.emailField, 10000)
+    console.log('Opening create form for users...');
+    await this.click(this.createButton);
   }
 
-  async fillUserForm(email, firstName, lastName) {
-    await this.fill(this.emailField, email)
-    await this.fill(this.firstNameField, firstName)
-    await this.fill(this.lastNameField, lastName)
-  }
-
-  async saveForm() {
-    await this.click(this.saveButton)
-  }
-
-  async createUser(email, firstName, lastName) {
-    await this.openCreateForm()
-    await this.fillUserForm(email, firstName, lastName)
-    await this.saveForm()
+  async createUser(email = null, firstName = null, lastName = null) {
+    const userEmail = email || `testuser${Date.now()}@example.com`;
+    const userFirstName = firstName || `TestFirstName${Date.now()}`;
+    const userLastName = lastName || `TestLastName${Date.now()}`;
+    await this.openCreateForm();
+    await this.fill(this.emailInput, userEmail);
+    await this.fill(this.firstNameInput, userFirstName);
+    await this.fill(this.lastNameInput, userLastName);
+    await this.click(this.saveButton);
+    
+    return userEmail;
   }
 }
 
-export default UsersPage
+export default UsersPage;

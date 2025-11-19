@@ -1,44 +1,33 @@
-import BasePage from './BasePage.js'
+import BasePage from './BasePage.js';
+import constants from '../utils/constants.js';
 
 class LabelsPage extends BasePage {
   constructor(page) {
-    super(page)
-    this.createButton = page.locator('span:has-text("Create")')
-    this.exportButton = page.locator('span:has-text("Export")')
-    this.nameField = page.getByLabel('Name')
-    this.saveButton = page.locator('button:has-text("Save")')
-    this.pageTitle = page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Labels?/i })
+    super(page);
+    this.createButton = this.page.locator(`a:has-text("${constants.tableElements.createButton}")`).first();
+    this.nameInput = this.page.locator('input[name="name"]').first();
+    this.saveButton = this.page.locator(`button:has-text("${constants.tableElements.saveButton}")`).first();
+    this.labelsLink = this.page.locator(`a:has-text("${constants.mainPageElements.labelMenuItemLabel}")`).first();
   }
 
-  async waitForPageLoaded() {
-    await Promise.race([
-      this.pageTitle.waitFor({ state: 'visible', timeout: 15000 }),
-      this.createButton.waitFor({ state: 'visible', timeout: 15000 }),
-      this.exportButton.waitFor({ state: 'visible', timeout: 15000 })
-    ])
-    console.log('Labels page loaded successfully')
+  async goto() {
+    await this.click(this.labelsLink);
+    await this.page.waitForURL('**/labels');
+    console.log('Labels page loaded successfully');
   }
 
   async openCreateForm() {
-    console.log('Opening create form for labels...')
-    await this.click(this.createButton)
-    await this.waitForModal()
-    await this.waitForElement(this.nameField, 10000)
+    console.log('Opening create form for labels...');
+    await this.click(this.createButton);
   }
 
-  async fillLabelForm(name) {
-    await this.fill(this.nameField, name)
-  }
-
-  async saveForm() {
-    await this.click(this.saveButton)
-  }
-
-  async createLabel(name) {
-    await this.openCreateForm()
-    await this.fillLabelForm(name)
-    await this.saveForm()
+  async createLabel(name = null) {
+    const labelName = name || `TestLabel${Date.now()}`;
+    await this.openCreateForm();
+    await this.fill(this.nameInput, labelName);
+    await this.click(this.saveButton);
+    return labelName;
   }
 }
 
-export default LabelsPage
+export default LabelsPage;

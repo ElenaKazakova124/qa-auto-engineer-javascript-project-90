@@ -1,22 +1,23 @@
 const mainPageElements = {
   themeButtonLabel: 'Toggle theme',
-  profileButtonLabel: 'Profile',
+  profileButtonLabel: 'Jane Doe', 
   logoutButtonLabel: 'Logout',
   welcomeText: 'Welcome to the administration', 
   usersMenuItemLabel: 'Users',
   statusMenuItemLabel: 'Task statuses', 
   labelMenuItemLabel: 'Labels',
-  tasksMenuItemLabel: 'Tasks'
+  tasksMenuItemLabel: 'Tasks',
+  dashboardMenuItemLabel: 'Dashboard' 
 }
 
 const authElements = {
-  usernameLabel: 'Username*',
-  passwordLabel: 'Password*', 
+  usernameLabel: 'Username',
+  passwordLabel: 'Password', 
   signInButton: 'SIGN IN'
 }
 
 const tableElements = {
-  createButton: '+ CREATE',         
+  createButton: 'Create', 
   exportButton: 'Export',          
   showButton: 'SHOW',
   editButton: 'EDIT', 
@@ -26,15 +27,15 @@ const tableElements = {
 }
 
 const formElements = {
-  nameField: 'Name*',
-  slugField: 'Slug*', 
-  emailField: 'Email*',
-  firstNameField: 'First name*',
-  lastNameField: 'Last name*',
-  assigneeField: 'Assignee*',
-  titleField: 'Title*',
+  nameField: 'Name',
+  slugField: 'Slug', 
+  emailField: 'Email',
+  firstNameField: 'First name',
+  lastNameField: 'Last name',
+  assigneeField: 'Assignee',
+  titleField: 'Title',
   contentField: 'Content',
-  statusField: 'Status*',
+  statusField: 'Status',
   labelField: 'Label'
 }
 

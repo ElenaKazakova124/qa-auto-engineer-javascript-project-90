@@ -1,20 +1,20 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from '@playwright/test';
+import constants from './utils/constants.js';
 
 test('Приложение успешно рендерится', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('http://localhost:5173/');
+  await expect(page.locator('body')).not.toBeEmpty();
   
-  await expect(page.locator('body')).not.toBeEmpty()
+  const usernameInput = page.getByLabel(constants.authElements.usernameLabel);
+  const passwordInput = page.getByLabel(constants.authElements.passwordLabel);
+  const signInButton = page.getByRole('button', { name: constants.authElements.signInButton });
   
-  const usernameInput = page.getByLabel('Username *')
-  const passwordInput = page.getByLabel('Password *')
-  const signInButton = page.getByRole('button', { name: 'Sign in' })
+  const welcomeText = page.getByText(constants.mainPageElements.welcomeText);
+  const profileButton = page.locator(`button:has-text("${constants.mainPageElements.profileButtonLabel}")`);
   
-  const welcomeText = page.getByText('Welcome')
-  const profileButton = page.getByRole('button', { name: 'Profile' })
-  
-  const isLoginPage = await usernameInput.isVisible().catch(() => false)
+  const isLoginPage = await usernameInput.isVisible().catch(() => false);
   const isDashboard = await welcomeText.isVisible().catch(() => false) || 
-                     await profileButton.isVisible().catch(() => false)
+                     await profileButton.isVisible().catch(() => false);
   
-  expect(isLoginPage || isDashboard).toBeTruthy()
-})
+  expect(isLoginPage || isDashboard).toBeTruthy();
+});

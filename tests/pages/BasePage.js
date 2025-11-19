@@ -1,62 +1,49 @@
-import { expect } from '@playwright/test'
-import Helpers from '../utils/helpers.js'
+import { expect } from '@playwright/test';
+import Helpers from '../utils/helpers.js';
 
 class BasePage {
   constructor(page) {
-    this.page = page
-    this.helpers = Helpers
+    this.page = page;
   }
 
-  async waitForElement(selector, timeout = 20000) {
+  async waitForElement(selector, timeout = 30000) {
     try {
-      await expect(selector).toBeVisible({ timeout })
+      await expect(selector).toBeVisible({ timeout });
     } catch (error) {
-      console.log(`Элемент не найден: ${selector}`)
-      console.log('Текущий URL:', this.page.url())
-      
-      const buttons = await this.page.$$('button')
-      console.log(`На странице найдено ${buttons.length} кнопок:`)
-      for (let i = 0; i < buttons.length; i++) {
-        const button = buttons[i]
-        const text = await button.textContent()
-        console.log(`  Кнопка ${i}: "${text?.trim()}"`)
-      }
-      
-      throw error
+      console.log(`Элемент не найден: ${selector}`);
+      console.log('Текущий URL:', this.page.url());
+      await Helpers.diagnosePageState(this.page, 'element-not-found');
+      throw error;
     }
   }
 
-  async click(selector) {
-    await this.waitForElement(selector)
-    await selector.click()
+  async click(selector, timeout = 30000) {
+    await this.waitForElement(selector, timeout);
+    await selector.click();
   }
 
-  async fill(selector, value) {
-    await this.waitForElement(selector)
-    await selector.fill(value)
+  async fill(selector, text, timeout = 30000) {
+    await this.waitForElement(selector, timeout);
+    await selector.fill(text);
   }
 
-  async waitForPageLoad() {
-    await this.page.waitForLoadState('networkidle')
+  async navigateTo(url) {
+    await this.page.goto(url);
   }
 
-  async waitForModal() {
-    await Promise.race([
-      this.page.waitForSelector('[role="dialog"]', { timeout: 10000 }),
-      this.page.waitForSelector('.MuiDialog-root', { timeout: 10000 }),
-      this.page.waitForSelector('form', { timeout: 10000 }),
-      this.page.waitForSelector('.modal', { timeout: 10000 })
-    ])
-    await this.page.waitForTimeout(500)
+  async getText(selector) {
+    await this.waitForElement(selector);
+    return await selector.textContent();
   }
 
-  async shouldSee(text) {
-    await this.helpers.shouldSee(this.page, text)
-  }
-
-  async shouldNotSee(text) {
-    await this.helpers.shouldNotSee(this.page, text)
+  async isElementVisible(selector, timeout = 5000) {
+    try {
+      await this.waitForElement(selector, timeout);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 
-export default BasePage
+export default BasePage;

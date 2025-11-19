@@ -1,42 +1,51 @@
-import BasePage from './BasePage.js'
+import BasePage from './BasePage.js';
+import constants from '../utils/constants.js';
+import helpers from '../utils/helpers.js'
 
 class DashboardPage extends BasePage {
   constructor(page) {
-    super(page)
-    this.welcomeText = page.getByText('Welcome')
-    this.tasksMenuItem = page.getByRole('menuitem', { name: 'Tasks' })
-    this.usersMenuItem = page.getByRole('menuitem', { name: 'Users' })
-    this.labelsMenuItem = page.getByRole('menuitem', { name: 'Labels' })
-    this.statusesMenuItem = page.getByRole('menuitem', { name: 'Task statuses' })
+    super(page);
+    this.dashboardLink = this.page.locator(`a:has-text("${constants.mainPageElements.dashboardMenuItemLabel}")`).first();
+    this.tasksLink = this.page.locator(`a:has-text("${constants.mainPageElements.tasksMenuItemLabel}")`).first();
+    this.usersLink = this.page.locator(`a:has-text("${constants.mainPageElements.usersMenuItemLabel}")`).first();
+    this.labelsLink = this.page.locator(`a:has-text("${constants.mainPageElements.labelMenuItemLabel}")`).first();
+    this.taskStatusesLink = this.page.locator(`a:has-text("${constants.mainPageElements.statusMenuItemLabel}")`).first();
   }
 
-  async waitForPageLoaded() {
-    await Promise.race([
-      this.welcomeText.waitFor({ state: 'visible', timeout: 15000 }),
-      this.tasksMenuItem.waitFor({ state: 'visible', timeout: 15000 })
-    ])
-    console.log('Dashboard page loaded successfully')
+  async waitForDashboard() {
+    await this.waitForElement(this.dashboardLink);
+    console.log('Dashboard page loaded successfully');
   }
 
-  async openTasksList() {
-    await this.click(this.tasksMenuItem)
-    await this.waitForPageLoad()
+  async goto() {
+    await this.click(this.dashboardLink);
   }
 
-  async openUsersList() {
-    await this.click(this.usersMenuItem)
-    await this.waitForPageLoad()
+  async gotoTasks() {
+    await this.click(this.tasksLink);
   }
 
-  async openLabelsList() {
-    await this.click(this.labelsMenuItem)
-    await this.waitForPageLoad()
+  async gotoUsers() {
+    await this.click(this.usersLink);
   }
 
-  async openStatusesList() {
-    await this.click(this.statusesMenuItem)
-    await this.waitForPageLoad()
+  async gotoLabels() {
+    await this.click(this.labelsLink);
+  }
+
+  async gotoTaskStatuses() {
+    await this.click(this.taskStatusesLink);
+  }
+
+  async logout() {
+    const profileButton = this.page.locator(`button:has-text("${constants.mainPageElements.profileButtonLabel}")`).first();
+    await profileButton.click();
+    
+    await helpers.waitForTimeout(2000);
+    
+    const logoutButton = this.page.locator(`text=${constants.mainPageElements.logoutButtonLabel}`).first();
+    await logoutButton.evaluate(node => node.click());
   }
 }
 
-export default DashboardPage
+export default DashboardPage;

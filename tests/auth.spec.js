@@ -1,12 +1,28 @@
-import { test, expect } from '@playwright/test'
-import Helpers from './utils/helpers.js'
+import { test, expect } from '@playwright/test';
+import LoginPage from './pages/LoginPage.js';
+import DashboardPage from './pages/DashboardPage.js';
+import constants from './utils/constants.js';
+import helpers from './utils/helpers.js'
 
-test('авторизация и выход', async ({ page }) => {
+test.describe('авторизация и выход', () => {
+  let loginPage;
+  let dashboardPage;
 
-  await Helpers.login(page, 'admin', 'admin')
-  await expect(page.getByText('Welcome')).toBeVisible()
-  await Helpers.logout(page)
-  
-  const signInButton = page.getByRole('button', { name: 'Sign in' })
-  await expect(signInButton).toBeVisible()
-})
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+    dashboardPage = new DashboardPage(page);
+  });
+
+  test('успешная авторизация', async ({ page }) => {
+    await loginPage.login('admin', 'admin');
+    await dashboardPage.waitForDashboard();
+    await helpers.shouldSee(page, constants.mainPageElements.welcomeText);
+  });
+
+  test('выход из системы', async ({ page }) => {
+    await loginPage.login('admin', 'admin');
+    await dashboardPage.waitForDashboard();
+    await dashboardPage.logout();
+    await expect(loginPage.signInButton).toBeVisible({ timeout: 10000 });
+  });
+});
