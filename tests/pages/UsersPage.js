@@ -3,7 +3,7 @@ import BasePage from './BasePage.js'
 class UsersPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("+ CREATE")')
+    this.createButton = page.locator('button:has-text("CREATE")')
     this.emailField = page.getByLabel('Email *')
     this.firstNameField = page.getByLabel('First name *')
     this.lastNameField = page.getByLabel('Last name *')

@@ -3,7 +3,7 @@ import BasePage from './BasePage.js'
 class LabelsPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("+ CREATE")')
+    this.createButton = page.locator('button:has-text("CREATE")')
     this.nameField = page.getByLabel('Name *')
     this.saveButton = page.locator('button:has-text("SAVE")')
     this.pageTitle = page.locator('h1, h2, h3, h4, h5, h6').filter({ hasText: /Labels?/i })

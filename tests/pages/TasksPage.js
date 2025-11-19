@@ -3,7 +3,7 @@ import BasePage from './BasePage.js'
 class TasksPage extends BasePage {
   constructor(page) {
     super(page)
-    this.createButton = page.locator('button:has-text("+ CREATE")')
+    this.createButton = page.locator('button:has-text("CREATE")')
     this.assigneeField = page.getByLabel('Assignee *')
     this.titleField = page.getByLabel('Title *')
     this.contentField = page.getByLabel('Content')
