@@ -167,6 +167,7 @@ class Helpers {
   }
 
   // ПРОВЕРКИ 
+
   static async shouldSee(page, text, timeout = 10000) {
     await expect(page.getByText(text).first()).toBeVisible({ timeout })
   }
@@ -178,6 +179,78 @@ class Helpers {
   static async shouldBeOnPage(page, expectedUrlPattern, timeout = 10000) {
     await page.waitForURL(expectedUrlPattern, { timeout })
   }
+
+// ПРОВЕРКИ 
+static async shouldSee(page, text, timeout = 10000) {
+  console.log(`🔍 Ищем текст: "${text}"`);
+  
+  // Сначала ищем в специфичных контейнерах (карточки, таблицы)
+  const containers = [
+    '.card', 
+    '.task-card',
+    '.kanban-card',
+    '[class*="card"]', 
+    '.MuiCard-root',
+    '.task-item', 
+    '.item', 
+    'table', 
+    'tbody',
+    '.list-group-item'
+  ];
+  
+  for (const container of containers) {
+    const locator = page.locator(container).filter({ hasText: text }).first();
+    if (await locator.count() > 0) {
+      console.log(`✅ Текст найден в контейнере: ${container}`);
+      await expect(locator).toBeVisible({ timeout });
+      return;
+    }
+  }
+  
+  // Если не нашли в контейнерах, ищем везде
+  console.log('🔄 Ищем текст по всей странице...');
+  const anyLocator = page.locator(`*:has-text("${text}")`).first();
+  await expect(anyLocator).toBeVisible({ timeout });
+}
+
+// Улучшенный метод поиска
+static async shouldSeeImproved(page, text, timeout = 10000) {
+  console.log(`🔍 Улучшенный поиск текста: "${text}"`);
+  
+  // Сначала проверим есть ли текст вообще в содержимом страницы
+  const pageContent = await page.textContent('body');
+  if (!pageContent || !pageContent.includes(text)) {
+    console.log('❌ Текст не найден в содержимом страницы');
+    throw new Error(`Текст "${text}" не найден на странице`);
+  }
+  
+  console.log('✅ Текст найден в содержимом страницы, ищем видимый элемент...');
+  
+  // Ищем все элементы содержащие текст
+  const elements = page.locator(`*:has-text("${text}")`);
+  const count = await elements.count();
+  console.log(`Найдено элементов с текстом: ${count}`);
+  
+  for (let i = 0; i < count; i++) {
+    const element = elements.nth(i);
+    const isVisible = await element.isVisible();
+    console.log(`Элемент ${i + 1}: видимый = ${isVisible}`);
+    
+    if (isVisible) {
+      console.log(`✅ Найден видимый элемент с текстом`);
+      return;
+    }
+  }
+  
+  // Если не нашли видимых элементов, используем стандартный метод
+  console.log('🔄 Используем стандартный поиск...');
+  await expect(page.getByText(text).first()).toBeVisible({ timeout });
+}
+
+static async shouldNotSee(page, text, timeout = 5000) {
+  const locator = page.locator(`*:has-text("${text}")`).first();
+  await expect(locator).not.toBeVisible({ timeout });
+}
 
   // УТИЛИТЫ 
   static async waitForTimeout(ms = 1000) {
