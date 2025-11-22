@@ -19,10 +19,10 @@ const authElements = {
 const tableElements = {
   createButton: 'Create', 
   exportButton: 'Export',          
-  showButton: 'SHOW',
-  editButton: 'EDIT', 
-  deleteButton: 'DELETE',          
-  saveButton: 'SAVE',            
+  showButton: 'Show',
+  editButton: 'Edit', 
+  deleteButton: 'Delete',          
+  saveButton: 'Save',            
   searchInput: 'Search...'
 }
 
