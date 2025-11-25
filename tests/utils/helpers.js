@@ -18,7 +18,6 @@ class Helpers {
       
       await page.waitForLoadState('networkidle')
       
-      // Ждем либо приветствие, либо дашборд
       const welcomeText = page.getByText(constants.mainPageElements.welcomeText)
       const dashboardLink = page.getByRole('menuitem', { name: constants.mainPageElements.dashboardMenuItemLabel })
       
@@ -35,11 +34,9 @@ class Helpers {
 
   static async logout(page) {
     try {
-      // Используем реальный селектор из работающих тестов
       const profileButton = page.locator(`button:has-text("${constants.mainPageElements.profileButtonLabel}")`).first()
       await profileButton.click()
       
-      // Ждем открытия меню
       await page.waitForTimeout(2000)
       
       const logoutButton = page.locator(`text=${constants.mainPageElements.logoutButtonLabel}`).first()
@@ -47,7 +44,6 @@ class Helpers {
       
       await page.waitForLoadState('networkidle')
       
-      // Проверяем что вернулись на страницу логина
       const signInButton = page.getByRole('button', { name: constants.authElements.signInButton })
       await expect(signInButton).toBeVisible({ timeout: 10000 })
       
@@ -74,7 +70,6 @@ class Helpers {
     
     console.log(`Navigating to: ${sections[section]}`)
     
-    // Используем селекторы из работающих тестов
     const menuItem = page.locator(`a:has-text("${sections[section]}")`).first()
     await menuItem.click()
     await page.waitForLoadState('networkidle')
@@ -103,7 +98,6 @@ class Helpers {
   static async clickCreate(page) {
     console.log('Looking for CREATE button...')
     
-    // Используем реальный селектор из работающих тестов
     const createButton = page.locator(`a:has-text("${constants.tableElements.createButton}")`).first()
     
     if (await createButton.isVisible({ timeout: 5000 })) {
@@ -113,7 +107,6 @@ class Helpers {
       return
     }
     
-    // Если не нашли, попробуем кнопку
     const createButtonAsButton = page.locator(`button:has-text("${constants.tableElements.createButton}")`).first()
     if (await createButtonAsButton.isVisible({ timeout: 5000 })) {
       console.log('✅ Found CREATE button (as button)')
@@ -140,11 +133,9 @@ class Helpers {
   static async fillForm(page, fields) {
     for (const [label, value] of Object.entries(fields)) {
       if (value !== undefined && value !== null) {
-        // Пробуем разные способы найти поле
         let field = page.getByLabel(label)
         
         if (!(await field.isVisible().catch(() => false))) {
-          // Если не нашли по label, пробуем по name
           field = page.locator(`input[name="${label.toLowerCase()}"], textarea[name="${label.toLowerCase()}"]`).first()
         }
         
@@ -180,11 +171,9 @@ class Helpers {
     await page.waitForURL(expectedUrlPattern, { timeout })
   }
 
-// ПРОВЕРКИ 
 static async shouldSee(page, text, timeout = 10000) {
   console.log(`🔍 Ищем текст: "${text}"`);
   
-  // Сначала ищем в специфичных контейнерах (карточки, таблицы)
   const containers = [
     '.card', 
     '.task-card',
@@ -207,17 +196,14 @@ static async shouldSee(page, text, timeout = 10000) {
     }
   }
   
-  // Если не нашли в контейнерах, ищем везде
   console.log('🔄 Ищем текст по всей странице...');
   const anyLocator = page.locator(`*:has-text("${text}")`).first();
   await expect(anyLocator).toBeVisible({ timeout });
 }
 
-// Улучшенный метод поиска
 static async shouldSeeImproved(page, text, timeout = 10000) {
   console.log(`🔍 Улучшенный поиск текста: "${text}"`);
   
-  // Сначала проверим есть ли текст вообще в содержимом страницы
   const pageContent = await page.textContent('body');
   if (!pageContent || !pageContent.includes(text)) {
     console.log('❌ Текст не найден в содержимом страницы');
@@ -226,7 +212,6 @@ static async shouldSeeImproved(page, text, timeout = 10000) {
   
   console.log('✅ Текст найден в содержимом страницы, ищем видимый элемент...');
   
-  // Ищем все элементы содержащие текст
   const elements = page.locator(`*:has-text("${text}")`);
   const count = await elements.count();
   console.log(`Найдено элементов с текстом: ${count}`);
@@ -242,7 +227,6 @@ static async shouldSeeImproved(page, text, timeout = 10000) {
     }
   }
   
-  // Если не нашли видимых элементов, используем стандартный метод
   console.log('🔄 Используем стандартный поиск...');
   await expect(page.getByText(text).first()).toBeVisible({ timeout });
 }
@@ -271,7 +255,6 @@ static async shouldNotSee(page, text, timeout = 5000) {
     console.log(`\n=== DIAGNOSIS FOR: ${pageName} ===`)
     console.log('Current URL:', page.url())
     
-    // Проверяем ключевые элементы
     const elementsToCheck = [
       { name: 'Profile button', selector: `button:has-text("${constants.mainPageElements.profileButtonLabel}")` },
       { name: 'CREATE button', selector: `a:has-text("${constants.tableElements.createButton}")` },
@@ -289,7 +272,6 @@ static async shouldNotSee(page, text, timeout = 5000) {
     const tableRows = await page.locator('tbody tr').count()
     console.log(`Table rows: ${tableRows}`)
     
-    // Сохраняем скриншот для отладки
     await page.screenshot({ path: `debug-${pageName}-${Date.now()}.png` })
     console.log(`Screenshot saved: debug-${pageName}-${Date.now()}.png`)
     
