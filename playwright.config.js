@@ -54,4 +54,12 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
   ],
+
+  /* Launch development server during tests */
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:5173',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
 });
