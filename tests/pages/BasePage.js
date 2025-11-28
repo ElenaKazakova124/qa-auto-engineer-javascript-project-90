@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import Helpers from '../utils/helpers.js';
+import helpers from '../utils/helpers.js';
 
 class BasePage {
   constructor(page) {
@@ -12,7 +12,7 @@ class BasePage {
     } catch (error) {
       console.log(`Элемент не найден: ${selector}`);
       console.log('Текущий URL:', this.page.url());
-      await Helpers.diagnosePageState(this.page, 'element-not-found');
+      await helpers.diagnosePageState(this.page, 'element-not-found');
       throw error;
     }
   }
