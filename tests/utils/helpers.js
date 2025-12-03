@@ -23,10 +23,7 @@ class Helpers {
       
       await expect(welcomeText.or(dashboardLink)).toBeVisible({ timeout: 15000 })
       
-      console.log('✅ Login successful')
-      
     } catch (error) {
-      console.error('❌ Login failed:', error.message)
       await this.diagnosePageState(page, 'login-error')
       throw error
     }
@@ -40,16 +37,15 @@ class Helpers {
       await page.waitForTimeout(2000)
       
       const logoutButton = page.locator(`text=${constants.mainPageElements.logoutButtonLabel}`).first()
-      await logoutButton.evaluate(node => node.click())
+      // Исправлено: используем click с force вместо evaluate
+      await logoutButton.click({ force: true })
       
       await page.waitForLoadState('networkidle')
       
       const signInButton = page.getByRole('button', { name: constants.authElements.signInButton })
       await expect(signInButton).toBeVisible({ timeout: 10000 })
       
-      console.log('✅ Logout successful')
     } catch (error) {
-      console.error('❌ Logout failed:', error.message)
       throw error
     }
   }
@@ -68,13 +64,9 @@ class Helpers {
       throw new Error(`Unknown section: ${section}. Available: ${Object.keys(sections).join(', ')}`)
     }
     
-    console.log(`Navigating to: ${sections[section]}`)
-    
     const menuItem = page.locator(`a:has-text("${sections[section]}")`).first()
     await menuItem.click()
     await page.waitForLoadState('networkidle')
-    
-    console.log(`✅ Navigation to ${section} completed`)
   }
 
   // ГЕНЕРАЦИЯ ДАННЫХ 
@@ -96,12 +88,9 @@ class Helpers {
 
   // ОСНОВНЫЕ ДЕЙСТВИЯ 
   static async clickCreate(page) {
-    console.log('Looking for CREATE button...')
-    
     const createButton = page.locator(`a:has-text("${constants.tableElements.createButton}")`).first()
     
     if (await createButton.isVisible({ timeout: 5000 })) {
-      console.log('✅ Found CREATE button')
       await createButton.click()
       await page.waitForLoadState('networkidle')
       return
@@ -109,7 +98,6 @@ class Helpers {
     
     const createButtonAsButton = page.locator(`button:has-text("${constants.tableElements.createButton}")`).first()
     if (await createButtonAsButton.isVisible({ timeout: 5000 })) {
-      console.log('✅ Found CREATE button (as button)')
       await createButtonAsButton.click()
       await page.waitForLoadState('networkidle')
       return
@@ -141,9 +129,6 @@ class Helpers {
         
         if (await field.isVisible().catch(() => false)) {
           await field.fill(value.toString())
-          console.log(`✅ Filled field "${label}" with value: ${value}`)
-        } else {
-          console.warn(`⚠️ Field "${label}" not found`)
         }
       }
     }
@@ -158,83 +143,36 @@ class Helpers {
   }
 
   // ПРОВЕРКИ 
-
   static async shouldSee(page, text, timeout = 10000) {
-    await expect(page.getByText(text).first()).toBeVisible({ timeout })
+    // Улучшенный метод поиска текста
+    const pageContent = await page.textContent('body');
+    if (!pageContent || !pageContent.includes(text)) {
+      throw new Error(`Текст "${text}" не найден на странице`);
+    }
+    
+    const elements = page.locator(`*:has-text("${text}")`);
+    const count = await elements.count();
+    
+    for (let i = 0; i < count; i++) {
+      const element = elements.nth(i);
+      const isVisible = await element.isVisible();
+      
+      if (isVisible) {
+        return;
+      }
+    }
+    
+    await expect(page.getByText(text).first()).toBeVisible({ timeout });
   }
 
   static async shouldNotSee(page, text, timeout = 5000) {
-    await expect(page.getByText(text)).not.toBeVisible({ timeout })
+    const locator = page.locator(`*:has-text("${text}")`).first();
+    await expect(locator).not.toBeVisible({ timeout });
   }
 
   static async shouldBeOnPage(page, expectedUrlPattern, timeout = 10000) {
-    await page.waitForURL(expectedUrlPattern, { timeout })
+    await page.waitForURL(expectedUrlPattern, { timeout });
   }
-
-static async shouldSee(page, text, timeout = 10000) {
-  console.log(`🔍 Ищем текст: "${text}"`);
-  
-  const containers = [
-    '.card', 
-    '.task-card',
-    '.kanban-card',
-    '[class*="card"]', 
-    '.MuiCard-root',
-    '.task-item', 
-    '.item', 
-    'table', 
-    'tbody',
-    '.list-group-item'
-  ];
-  
-  for (const container of containers) {
-    const locator = page.locator(container).filter({ hasText: text }).first();
-    if (await locator.count() > 0) {
-      console.log(`✅ Текст найден в контейнере: ${container}`);
-      await expect(locator).toBeVisible({ timeout });
-      return;
-    }
-  }
-  
-  console.log('🔄 Ищем текст по всей странице...');
-  const anyLocator = page.locator(`*:has-text("${text}")`).first();
-  await expect(anyLocator).toBeVisible({ timeout });
-}
-
-static async shouldSeeImproved(page, text, timeout = 10000) {
-  console.log(`🔍 Улучшенный поиск текста: "${text}"`);
-  
-  const pageContent = await page.textContent('body');
-  if (!pageContent || !pageContent.includes(text)) {
-    console.log('❌ Текст не найден в содержимом страницы');
-    throw new Error(`Текст "${text}" не найден на странице`);
-  }
-  
-  console.log('✅ Текст найден в содержимом страницы, ищем видимый элемент...');
-  
-  const elements = page.locator(`*:has-text("${text}")`);
-  const count = await elements.count();
-  console.log(`Найдено элементов с текстом: ${count}`);
-  
-  for (let i = 0; i < count; i++) {
-    const element = elements.nth(i);
-    const isVisible = await element.isVisible();
-    console.log(`Элемент ${i + 1}: видимый = ${isVisible}`);
-    
-    if (isVisible) {
-      console.log(`✅ Найден видимый элемент с текстом`);
-      return;
-    }
-  }
-  
-  console.log('🔄 Используем стандартный поиск...');
-  await expect(page.getByText(text).first()).toBeVisible({ timeout });
-}
-
-static async shouldNotSee(page, text, timeout = 5000) {
-  const locator = page.locator(`*:has-text("${text}")`).first();
-  await expect(locator).not.toBeVisible({ timeout });
-}
 
   // УТИЛИТЫ 
   static async waitForTimeout(ms = 1000) {
@@ -252,6 +190,9 @@ static async shouldNotSee(page, text, timeout = 5000) {
 
   // ДИАГНОСТИКА СОСТОЯНИЯ СТРАНИЦЫ
   static async diagnosePageState(page, pageName = 'unknown') {
+    // Исправлено: используем один timestamp для имени файла и лога
+    const timestamp = Date.now();
+    
     console.log(`\n=== DIAGNOSIS FOR: ${pageName} ===`)
     console.log('Current URL:', page.url())
     
@@ -272,8 +213,8 @@ static async shouldNotSee(page, text, timeout = 5000) {
     const tableRows = await page.locator('tbody tr').count()
     console.log(`Table rows: ${tableRows}`)
     
-    await page.screenshot({ path: `debug-${pageName}-${Date.now()}.png` })
-    console.log(`Screenshot saved: debug-${pageName}-${Date.now()}.png`)
+    await page.screenshot({ path: `debug-${pageName}-${timestamp}.png` })
+    console.log(`Screenshot saved: debug-${pageName}-${timestamp}.png`)
     
     console.log('=== END DIAGNOSIS ===\n')
   }

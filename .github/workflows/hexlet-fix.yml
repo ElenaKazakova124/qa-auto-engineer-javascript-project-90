@@ -1,0 +1,24 @@
+name: Hexlet Compatibility Fix
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Install with Node 20 compatibility
+      run: |
+        npm install
+        npx playwright install chromium firefox
+    - name: Build project
+      run: npm run build
+    - name: Run tests with static server
+      run: |
+        npm run serve &
+        sleep 5
+        npx playwright test --project=chromium --project=firefox
