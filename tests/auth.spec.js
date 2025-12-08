@@ -13,6 +13,7 @@ test.describe('авторизация и выход', () => {
     dashboardPage = new DashboardPage(page);
     
     await loginPage.goto();
+    await expect(loginPage.signInButton).toBeVisible({ timeout: 10000 });
   });
 
   test('успешная авторизация', async ({ page }) => {
@@ -21,11 +22,14 @@ test.describe('авторизация и выход', () => {
     await helpers.shouldSee(page, constants.mainPageElements.welcomeText);
   });
 
-  test('выход из системы', async ({ page }) => {
-    await expect(page).toHaveURL(/.*\/login/);
+  test('выход из системы', async () => { 
+    await expect(loginPage.usernameInput).toBeVisible();
+    await expect(loginPage.passwordInput).toBeVisible();
+    
     await loginPage.login('admin', 'admin');
     await dashboardPage.waitForDashboard();
     await dashboardPage.logout();
+    
     await expect(loginPage.signInButton).toBeVisible({ timeout: 10000 });
   });
 });

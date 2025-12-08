@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig, devices } from '@playwright/test';
 
-/* global process */
 
 export default defineConfig({
   testDir: './tests',
@@ -19,7 +18,6 @@ export default defineConfig({
     timeout: 30000,
   },
 
-  /* Используем только Chromium и Firefox в CI, локально все браузеры */
   projects: process.env.CI ? [
     {
       name: 'chromium',
@@ -46,8 +44,8 @@ export default defineConfig({
 
   webServer: {
     command: process.env.CI 
-      ? 'npm run build && npm run serve'  // В CI: сборка + статический сервер
-      : 'npm run dev',                    // Локально: dev-сервер
+      ? 'npm run build && npm run serve'  
+      : 'npm run dev',                   
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 180 * 1000,

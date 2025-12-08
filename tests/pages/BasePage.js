@@ -1,4 +1,3 @@
-import { expect } from '@playwright/test';
 import helpers from '../utils/helpers.js';
 
 class BasePage {
@@ -8,7 +7,11 @@ class BasePage {
 
   async waitForElement(selector, timeout = 30000) {
     try {
-      await expect(selector).toBeVisible({ timeout });
+      if (typeof selector === 'string') {
+        await this.page.waitForSelector(selector, { state: 'visible', timeout });
+      } else {
+        await selector.waitFor({ state: 'visible', timeout });
+      }
     } catch (error) {
       console.log(`Элемент не найден: ${selector}`);
       console.log('Текущий URL:', this.page.url());
@@ -19,12 +22,20 @@ class BasePage {
 
   async click(selector, timeout = 30000) {
     await this.waitForElement(selector, timeout);
-    await selector.click();
+    if (typeof selector === 'string') {
+      await this.page.click(selector);
+    } else {
+      await selector.click();
+    }
   }
 
   async fill(selector, text, timeout = 30000) {
     await this.waitForElement(selector, timeout);
-    await selector.fill(text);
+    if (typeof selector === 'string') {
+      await this.page.fill(selector, text);
+    } else {
+      await selector.fill(text);
+    }
   }
 
   async navigateTo(url) {
@@ -33,7 +44,11 @@ class BasePage {
 
   async getText(selector) {
     await this.waitForElement(selector);
-    return await selector.textContent();
+    if (typeof selector === 'string') {
+      return await this.page.textContent(selector);
+    } else {
+      return await selector.textContent();
+    }
   }
 
   async isElementVisible(selector, timeout = 5000) {
