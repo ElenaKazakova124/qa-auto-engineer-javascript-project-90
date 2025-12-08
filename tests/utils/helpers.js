@@ -30,24 +30,18 @@ class Helpers {
   }
 
   static async logout(page) {
-    try {
-      const profileButton = page.locator(`button:has-text("${constants.mainPageElements.profileButtonLabel}")`).first()
-      await profileButton.click()
-      
-      await page.waitForTimeout(2000)
-      
-      const logoutButton = page.locator(`text=${constants.mainPageElements.logoutButtonLabel}`).first()
-      // Исправлено: используем click с force вместо evaluate
-      await logoutButton.click({ force: true })
-      
-      await page.waitForLoadState('networkidle')
-      
-      const signInButton = page.getByRole('button', { name: constants.authElements.signInButton })
-      await expect(signInButton).toBeVisible({ timeout: 10000 })
-      
-    } catch (error) {
-      throw error
-    }
+    const profileButton = page.locator(`button:has-text("${constants.mainPageElements.profileButtonLabel}")`).first()
+    await profileButton.click()
+    
+    await page.waitForTimeout(2000)
+    
+    const logoutButton = page.locator(`text=${constants.mainPageElements.logoutButtonLabel}`).first()
+    await logoutButton.click({ force: true })
+    
+    await page.waitForLoadState('networkidle')
+    
+    const signInButton = page.getByRole('button', { name: constants.authElements.signInButton })
+    await expect(signInButton).toBeVisible({ timeout: 10000 })
   }
 
   // НАВИГАЦИЯ 
@@ -145,33 +139,33 @@ class Helpers {
   // ПРОВЕРКИ 
   static async shouldSee(page, text, timeout = 10000) {
     // Улучшенный метод поиска текста
-    const pageContent = await page.textContent('body');
+    const pageContent = await page.textContent('body')
     if (!pageContent || !pageContent.includes(text)) {
-      throw new Error(`Текст "${text}" не найден на странице`);
+      throw new Error(`Текст "${text}" не найден на странице`)
     }
     
-    const elements = page.locator(`*:has-text("${text}")`);
-    const count = await elements.count();
+    const elements = page.locator(`*:has-text("${text}")`)
+    const count = await elements.count()
     
     for (let i = 0; i < count; i++) {
-      const element = elements.nth(i);
-      const isVisible = await element.isVisible();
+      const element = elements.nth(i)
+      const isVisible = await element.isVisible()
       
       if (isVisible) {
-        return;
+        return
       }
     }
     
-    await expect(page.getByText(text).first()).toBeVisible({ timeout });
+    await expect(page.getByText(text).first()).toBeVisible({ timeout })
   }
 
   static async shouldNotSee(page, text, timeout = 5000) {
-    const locator = page.locator(`*:has-text("${text}")`).first();
-    await expect(locator).not.toBeVisible({ timeout });
+    const locator = page.locator(`*:has-text("${text}")`).first()
+    await expect(locator).not.toBeVisible({ timeout })
   }
 
   static async shouldBeOnPage(page, expectedUrlPattern, timeout = 10000) {
-    await page.waitForURL(expectedUrlPattern, { timeout });
+    await page.waitForURL(expectedUrlPattern, { timeout })
   }
 
   // УТИЛИТЫ 
@@ -190,8 +184,7 @@ class Helpers {
 
   // ДИАГНОСТИКА СОСТОЯНИЯ СТРАНИЦЫ
   static async diagnosePageState(page, pageName = 'unknown') {
-    // Исправлено: используем один timestamp для имени файла и лога
-    const timestamp = Date.now();
+    const timestamp = Date.now()
     
     console.log(`\n=== DIAGNOSIS FOR: ${pageName} ===`)
     console.log('Current URL:', page.url())
@@ -210,10 +203,12 @@ class Helpers {
       console.log(`${element.name}: visible=${isVisible}, count=${count}`)
     }
     
-    const tableRows = await page.locator('tbody tr').count()
+    const tableRows = await page.locator('tbody tr').count().catch(() => 0)
     console.log(`Table rows: ${tableRows}`)
     
-    await page.screenshot({ path: `debug-${pageName}-${timestamp}.png` })
+    await page.screenshot({ path: `debug-${pageName}-${timestamp}.png` }).catch(() => {
+      console.log('Failed to take screenshot')
+    })
     console.log(`Screenshot saved: debug-${pageName}-${timestamp}.png`)
     
     console.log('=== END DIAGNOSIS ===\n')

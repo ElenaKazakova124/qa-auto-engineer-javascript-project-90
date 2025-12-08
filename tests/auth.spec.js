@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import LoginPage from './pages/LoginPage.js';
 import DashboardPage from './pages/DashboardPage.js';
 import constants from './utils/constants.js';
-import helpers from './utils/helpers.js'
+import helpers from './utils/helpers.js';
 
 test.describe('авторизация и выход', () => {
   let loginPage;
@@ -11,6 +11,8 @@ test.describe('авторизация и выход', () => {
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     dashboardPage = new DashboardPage(page);
+    
+    await loginPage.goto();
   });
 
   test('успешная авторизация', async ({ page }) => {
@@ -20,6 +22,7 @@ test.describe('авторизация и выход', () => {
   });
 
   test('выход из системы', async ({ page }) => {
+    await expect(page).toHaveURL(/.*\/login/);
     await loginPage.login('admin', 'admin');
     await dashboardPage.waitForDashboard();
     await dashboardPage.logout();

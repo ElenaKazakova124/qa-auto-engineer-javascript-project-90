@@ -1,6 +1,8 @@
 // @ts-check
 import { defineConfig, devices } from '@playwright/test';
 
+/* global process */
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,

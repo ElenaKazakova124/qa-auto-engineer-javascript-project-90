@@ -29,7 +29,7 @@ class LoginPage extends BasePage {
     try {
       await this.page.waitForURL('**/#/tasks', { timeout: 10000 });
       console.log('Login successful - redirected to tasks');
-    } catch (error) {
+    } catch {  // Убрали параметр полностью
       try {
         await this.page.waitForURL('**/#/dashboard', { timeout: 5000 });
         console.log('Login successful - redirected to dashboard');

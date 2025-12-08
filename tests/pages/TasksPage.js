@@ -78,10 +78,10 @@ class TasksPage extends BasePage {
     
     try {
       await expect(this.createForm).not.toBeVisible({ timeout: 5000 });
-    } catch (error) {
+    } catch {  // Убрали неиспользуемый параметр error
       try {
         await expect(this.successMessage).toBeVisible({ timeout: 5000 });
-      } catch (e) {
+      } catch {  // Убрали неиспользуемый параметр e
         console.log('Form did not disappear and no success message, but proceeding...');
       }
     }
