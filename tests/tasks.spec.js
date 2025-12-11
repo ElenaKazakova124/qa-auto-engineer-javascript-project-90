@@ -1,13 +1,8 @@
 import { test, expect } from '@playwright/test';
-import LoginPage from './pages/LoginPage.js';
-import DashboardPage from './pages/DashboardPage.js';
 import helpers from './utils/helpers.js';
 
 test.describe('Задачи', () => {
   test.beforeEach(async ({ page }) => {
-    const _loginPage = new LoginPage(page);
-    const _dashboardPage = new DashboardPage(page);
-    
     await helpers.login(page, 'admin', 'admin');
     
     await page.goto('http://localhost:5173/#/tasks');

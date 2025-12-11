@@ -1,13 +1,8 @@
 import { test, expect } from '@playwright/test';
-import LoginPage from './pages/LoginPage.js';
-import DashboardPage from './pages/DashboardPage.js';
 import helpers from './utils/helpers.js';
 
 test.describe('Статусы', () => {
   test.beforeEach(async ({ page }) => {
-    const _loginPage = new LoginPage(page);
-    const _dashboardPage = new DashboardPage(page);
-    
     await helpers.login(page, 'admin', 'admin');
     
     await page.goto('http://localhost:5173/#/task_statuses');
@@ -119,9 +114,9 @@ test.describe('Статусы', () => {
     await helpers.waitForTimeout(2000);
     
     const statusElement = page.locator(`tr:has-text("${statusData.name}")`).first();
-    const _isStatusVisible = await statusElement.isVisible({ timeout: 10000 }).catch(() => false);
+    const isStatusVisible = await statusElement.isVisible({ timeout: 10000 }).catch(() => false);
     
-    if (!_isStatusVisible) {
+    if (!isStatusVisible) {
       await page.screenshot({ path: `debug-status-not-found-${Date.now()}.png` });
     }
   });

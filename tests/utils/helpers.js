@@ -61,7 +61,7 @@ class Helpers {
     }
   }
 
-  // НАВИГАЦИЯ 
+  // НАВИГАЦИЯ
   static async navigateTo(page, section) {
     const sections = {
       dashboard: 'Dashboard',
@@ -213,7 +213,7 @@ class Helpers {
     }
   }
 
-  // УТИЛИТЫ 
+  // УТИЛИТЫ
   static async waitForTimeout(ms = 1000) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -228,7 +228,7 @@ class Helpers {
     return await page.locator('tbody tr').count();
   }
 
-  // СОЗДАНИЕ ТЕСТОВЫХ ДАННЫХ 
+  // СОЗДАНИЕ ТЕСТОВЫХ ДАННЫХ
   static async createTestData(page, type, data = {}) {
     const testData = {
       user: {
@@ -261,7 +261,7 @@ class Helpers {
   }
 
   // МАССОВОЕ УДАЛЕНИЕ 
-  static async massDelete(page, _entityType) {
+  static async massDelete(page) {
     const selectAllCheckbox = page.locator('thead input[type="checkbox"]').first();
     if (await selectAllCheckbox.isVisible({ timeout: 5000 })) {
       await selectAllCheckbox.check();
@@ -289,7 +289,7 @@ class Helpers {
     }
   }
 
-  // ПЕРЕМЕЩЕНИЕ ЗАДАЧИ МЕЖДУ КОЛОНКАМИ 
+  // ПЕРЕМЕЩЕНИЕ ЗАДАЧИ МЕЖДУ КОЛОНКАМИ
   static async moveTaskBetweenColumns(page, taskName, fromColumn, toColumn) {
     const sourceColumn = page.locator(`.kanban-column:has-text("${fromColumn}")`);
     const taskCard = sourceColumn.locator(`.task-card:has-text("${taskName}")`);
@@ -325,7 +325,6 @@ class Helpers {
     
     return false;
   }
-
 }
 
 export default Helpers;
