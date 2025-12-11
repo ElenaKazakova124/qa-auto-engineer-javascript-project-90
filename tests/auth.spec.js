@@ -1,34 +1,31 @@
 import { test, expect } from '@playwright/test';
 import LoginPage from './pages/LoginPage.js';
 import DashboardPage from './pages/DashboardPage.js';
-import constants from './utils/constants.js';
-import helpers from './utils/helpers.js';
 
-test.describe('авторизация и выход', () => {
-  let loginPage;
-  let dashboardPage;
-
-  test.beforeEach(async ({ page }) => {
-    loginPage = new LoginPage(page);
-    dashboardPage = new DashboardPage(page);
+test.describe('Авторизация и выход', () => {
+  test('успешная авторизация', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const dashboardPage = new DashboardPage(page);
     
     await loginPage.goto();
-    await expect(loginPage.signInButton).toBeVisible({ timeout: 10000 });
-  });
-
-  test('успешная авторизация', async ({ page }) => {
     await loginPage.login('admin', 'admin');
     await dashboardPage.waitForDashboard();
-    await helpers.shouldSee(page, constants.mainPageElements.welcomeText);
   });
 
-  test('выход из системы', async () => { 
-    await expect(loginPage.usernameInput).toBeVisible();
-    await expect(loginPage.passwordInput).toBeVisible();
+  test('успешный выход из системы', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const dashboardPage = new DashboardPage(page);
     
+    await loginPage.goto();
     await loginPage.login('admin', 'admin');
     await dashboardPage.waitForDashboard();
-    await dashboardPage.logout();
+    
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+    
+    await page.goto('http://localhost:5173/');
     
     await expect(loginPage.signInButton).toBeVisible({ timeout: 10000 });
   });

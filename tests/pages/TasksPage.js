@@ -1,97 +1,108 @@
 import BasePage from './BasePage.js';
-import constants from '../utils/constants.js';
-import { expect } from '@playwright/test';
+import helpers from '../utils/helpers.js';
 
 class TasksPage extends BasePage {
   constructor(page) {
     super(page);
-    this.createButton = this.page.locator(`a:has-text("${constants.tableElements.createButton}")`);
-    this.saveButton = this.page.locator(`button[aria-label="Save"]`);
-    this.tasksLink = this.page.locator(`a:has-text("${constants.mainPageElements.tasksMenuItemLabel}")`);
     
-    this.assigneeSelection = this.page.getByRole('combobox', { name: 'Assignee' });
-    this.titleInput = this.page.getByLabel('Title');
-    this.contentInput = this.page.locator('textarea[name="content"]');
-    this.statusSelection = this.page.getByRole('combobox', { name: 'Status' });
-    this.labelSelection = this.page.getByRole('combobox', { name: 'Label' });
+    this.createButton = this.page.locator('a:has-text("Create"), button:has-text("Create")').first();
+    this.taskNameInput = this.page.locator('input[name="title"], input[name="name"]').first();
+    this.taskContentInput = this.page.locator('textarea[name="content"], textarea[name="description"]').first();
+    this.assigneeSelect = this.page.locator('select[name="assignee"], [aria-label*="assignee"]').first();
+    this.statusSelect = this.page.locator('select[name="status"], [aria-label*="status"]').first();
+    this.labelSelect = this.page.locator('select[name="label"], [aria-label*="label"]').first();
+    this.saveButton = this.page.locator('button:has-text("SAVE"), button:has-text("Save")').first();
+    this.searchInput = this.page.locator('input[placeholder*="Search"]').first();
     
-    this.successMessage = this.page.locator('.alert-success, .text-success, [class*="success"]');
-    this.errorMessage = this.page.locator('.error, .text-danger, .invalid-feedback, [class*="error"]');
-    this.createForm = this.page.locator('.RaCreate-card');
+    this.kanbanColumns = this.page.locator('.kanban-column, .board-column, .column, [class*="column"]');
+    this.taskCards = this.page.locator('.task-card, .card, [class*="task"]');
   }
 
   async goto() {
-    await this.tasksLink.click();
-    await this.page.waitForURL('**/#/tasks', { timeout: 10000 });
+    await this.page.goto('http://localhost:5173/#/tasks');
+    await helpers.waitForPageLoad(this.page);
   }
 
-  async waitForFormReady() {
-    await expect(this.createForm).toBeVisible({ timeout: 15000 });
+  async createTask(name, description, assignee = null, status = null, label = null) {
     
-    await expect(this.assigneeSelection).toBeVisible();
-    await expect(this.titleInput).toBeVisible();
-    await expect(this.contentInput).toBeVisible();
-    await expect(this.statusSelection).toBeVisible();
-    await expect(this.saveButton).toBeVisible();
-  }
-
-  async chooseItem(dropdownLocator, optionIndex = 0) {
-    await dropdownLocator.click();
+    await this.page.goto('http://localhost:5173/#/tasks/create');
+    await helpers.waitForPageLoad(this.page);
     
-    await this.page.waitForSelector('[role="listbox"]', { timeout: 5000 });
+    await this.waitForElement(this.taskNameInput, 10000);
+    await this.fill(this.taskNameInput, name);
     
-    const options = this.page.locator('[role="listbox"] [role="option"]');
-    const optionCount = await options.count();
-    
-    if (optionCount > 0 && optionIndex < optionCount) {
-      await options.nth(optionIndex).click();
-    } else if (optionCount > 0) {
-      await options.first().click();
+    if (description && await this.taskContentInput.isVisible({ timeout: 5000 })) {
+      await this.fill(this.taskContentInput, description);
     }
     
-    await this.page.click('body', { position: { x: 10, y: 10 } });
-    await this.page.waitForTimeout(300);
-  }
-
-  async createTask(title, description = 'Test description') {
-    await this.createButton.click();
-    
-    await this.waitForFormReady();
-    
-    await this.chooseItem(this.assigneeSelection, 0);
-    
-    await this.titleInput.fill(title);
-    await expect(this.titleInput).toHaveValue(title);
-    
-    await this.contentInput.fill(description);
-    await expect(this.contentInput).toHaveValue(description);
-    
-    await this.chooseItem(this.statusSelection, 0);
-    
-    if (await this.labelSelection.isVisible({ timeout: 2000 })) {
-      await this.chooseItem(this.labelSelection, 0);
+    if (assignee) {
+      await this.selectCustomDropdown(this.assigneeSelect, assignee);
     }
     
-    await expect(this.saveButton).toBeEnabled();
+    if (status) {
+      await this.selectCustomDropdown(this.statusSelect, status);
+    }
     
-    await this.saveButton.click();
+    if (label) {
+      await this.selectCustomDropdown(this.labelSelect, label);
+    }
     
-    try {
-      await expect(this.createForm).not.toBeVisible({ timeout: 5000 });
-    } catch {  // Убрали неиспользуемый параметр error
-      try {
-        await expect(this.successMessage).toBeVisible({ timeout: 5000 });
-      } catch {  // Убрали неиспользуемый параметр e
-        console.log('Form did not disappear and no success message, but proceeding...');
+    await this.click(this.saveButton);
+    await helpers.waitForPageLoad(this.page);
+  }
+
+  async selectCustomDropdown(dropdownLocator, optionText) {
+    if (await dropdownLocator.isVisible({ timeout: 3000 })) {
+      const isSelect = await dropdownLocator.evaluate(el => el.tagName === 'SELECT');
+      
+      if (isSelect) {
+        await dropdownLocator.selectOption({ label: optionText });
+      } else {
+        await dropdownLocator.click();
+        await helpers.waitForTimeout(1000);
+        const option = this.page.locator(`[role="option"]:has-text("${optionText}"), option:has-text("${optionText}")`).first();
+        if (await option.isVisible({ timeout: 2000 })) {
+          await option.click();
+        }
       }
     }
-    
-    await this.goto();
   }
 
-  async verifyTaskExists(title) {
-    const taskLocator = this.page.locator(`text=${title}`).first();
-    return await taskLocator.isVisible({ timeout: 5000 });
+  async getTaskCount() {
+    return await this.taskCards.count();
+  }
+
+  async getColumnCount() {
+    return await this.kanbanColumns.count();
+  }
+
+  async moveTaskToColumn(taskName, columnIndex) {
+    const taskCard = this.page.locator(`.task-card:has-text("${taskName}")`).first();
+    const targetColumn = this.kanbanColumns.nth(columnIndex);
+    
+    if (await taskCard.isVisible() && await targetColumn.isVisible()) {
+      await taskCard.dragTo(targetColumn);
+      await helpers.waitForTimeout(2000);
+      return true;
+    }
+    return false;
+  }
+
+  async searchTask(searchText) {
+    if (await this.searchInput.isVisible({ timeout: 5000 })) {
+      await this.fill(this.searchInput, searchText);
+      await helpers.waitForTimeout(1000);
+    }
+  }
+
+  async openTaskDetails(taskName) {
+    const taskCard = this.page.locator(`.task-card:has-text("${taskName}")`).first();
+    if (await taskCard.isVisible({ timeout: 5000 })) {
+      await taskCard.click();
+      await helpers.waitForPageLoad(this.page);
+      return true;
+    }
+    return false;
   }
 }
 

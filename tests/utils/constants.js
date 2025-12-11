@@ -7,7 +7,8 @@ const mainPageElements = {
   statusMenuItemLabel: 'Task statuses', 
   labelMenuItemLabel: 'Labels',
   tasksMenuItemLabel: 'Tasks',
-  dashboardMenuItemLabel: 'Dashboard' 
+  dashboardMenuItemLabel: 'Dashboard',
+  searchPlaceholder: 'Search...'
 }
 
 const authElements = {
@@ -23,7 +24,12 @@ const tableElements = {
   editButton: 'Edit', 
   deleteButton: 'Delete',          
   saveButton: 'Save',            
-  searchInput: 'Search...'
+  saveChangesButton: 'Save changes',
+  searchInput: 'Search...',
+  selectAll: 'Select all',
+  deleteSelected: 'Delete selected',
+  confirmButton: 'Confirm',
+  cancelButton: 'Cancel'
 }
 
 const formElements = {
@@ -36,7 +42,8 @@ const formElements = {
   titleField: 'Title',
   contentField: 'Content',
   statusField: 'Status',
-  labelField: 'Label'
+  labelField: 'Label',
+  descriptionField: 'Description'
 }
 
 const existingData = {
@@ -86,13 +93,26 @@ const testStatuses = {
 const testTasks = {
   newTask: {
     title: 'Test Task',
-    content: 'Test task description'
+    content: 'Test task description',
+    assignee: 'michael@example.com',
+    status: 'Draft',
+    label: 'bug'
+  },
+  updatedTask: {
+    title: 'Updated Task',
+    content: 'Updated description',
+    assignee: 'john@google.com',
+    status: 'To Review',
+    label: 'feature'
   }
 }
 
 const testLabels = {
   newLabel: {
     name: 'Test Label'
+  },
+  updatedLabel: {
+    name: 'Updated Label'
   }
 }
 
