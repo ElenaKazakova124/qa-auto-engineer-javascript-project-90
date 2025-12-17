@@ -1,16 +1,13 @@
 import BasePage from './BasePage.js';
-import constants from '../utils/constants.js';
 import helpers from '../utils/helpers.js';
 
 class TasksPage extends BasePage {
   constructor(page) {
     super(page);
     
-    // Навигация
     this.tasksMenuItem = page.locator('a:has-text("Tasks"), [href*="tasks"]').first();
     this.createButton = page.locator('a:has-text("Create"), button:has-text("Create")').first();
     
-    // Форма создания
     this.assigneeField = page.locator('[name="assignee"], select[name="assignee"], input[placeholder*="Assignee"]').first();
     this.titleField = page.locator('[name="title"], input[placeholder*="Title"]').first();
     this.contentField = page.locator('[name="content"], textarea[placeholder*="Content"]').first();
@@ -18,25 +15,20 @@ class TasksPage extends BasePage {
     this.labelField = page.locator('select[name="label"], [name="label"]').first();
     this.saveButton = page.locator('button:has-text("Save"), button[type="submit"]').first();
     
-    // Действия
     this.editButton = page.locator('button:has-text("Edit")').first();
     this.deleteButton = page.locator('button:has-text("Delete")').first();
     this.confirmDeleteButton = page.locator('button:has-text("Confirm"), button:has-text("Yes")').first();
     
-    // Уведомления
     this.snackbar = page.locator('.MuiSnackbar-root, [role="status"], .snackbar').first();
     this.undoButton = page.locator('button:has-text("UNDO")').first();
     
-    // Канбан-доска
-    this.kanbanColumns = page.locator('.column, [class*="column"], .lane, section, article');
-    this.taskCards = page.locator('.task-card, .card, [class*="task"], [role="article"], [data-test*="task"]');
+    this.kanbanColumns = page.locator('.column, [class*="column"], .lane, section, article, [class*="Column"], [class*="Lane"], [class*="Status"]');
+    this.taskCards = page.locator('.task-card, .card, [class*="task"], [role="article"], [data-test*="task"], tbody tr');
+    this.tableRows = page.locator('tbody tr');
   }
 
   async goto() {
-    console.log('Переходим на страницу задач');
-    
     try {
-      // Пробуем разные URL
       const urls = ['/#/tasks', '/tasks', '/#/kanban', '/kanban'];
       
       for (const url of urls) {
@@ -46,69 +38,52 @@ class TasksPage extends BasePage {
             timeout: 30000 
           });
           
-          await helpers.waitForTimeout(2000);
-          
-          // Проверяем, что мы на странице задач
           const currentUrl = this.page.url();
           const pageText = await this.page.textContent('body', { timeout: 2000 }).catch(() => '');
           
           if (currentUrl.includes('tasks') || currentUrl.includes('kanban') || 
               pageText.includes('Task') || pageText.includes('task')) {
-            console.log(`Успешно перешли по URL: ${url}`);
             return true;
           }
-        } catch (error) {
-          console.log(`Не удалось перейти по URL ${url}: ${error.message}`);
+        } catch (_error) {
+          continue;
         }
       }
       
-      // Пробуем через меню
       if (await this.tasksMenuItem.isVisible({ timeout: 5000 }).catch(() => false)) {
         await this.tasksMenuItem.click();
         await helpers.waitForPageLoad(this.page);
-        await helpers.waitForTimeout(2000);
         return true;
       }
       
       return false;
-    } catch (error) {
-      console.error(`Ошибка при переходе на страницу задач: ${error.message}`);
+    } catch (_error) {
       return false;
     }
   }
 
   async openCreateForm() {
-    console.log('Открываем форму создания задачи');
-    
     try {
-      // Прямой переход
       await this.page.goto('/#/tasks/create', { 
         waitUntil: 'networkidle',
         timeout: 30000 
       });
       
-      await helpers.waitForTimeout(2000);
-      
-      // Проверяем наличие полей формы
       const hasTitleField = await this.titleField.isVisible({ timeout: 5000 }).catch(() => false);
       if (hasTitleField) {
         return true;
       }
       
-      // Пробуем через кнопку Create
       await this.goto();
-      await helpers.waitForTimeout(1000);
       
       if (await this.createButton.isVisible({ timeout: 5000 })) {
         await this.createButton.click();
         await helpers.waitForPageLoad(this.page);
-        await helpers.waitForTimeout(2000);
         return true;
       }
       
       return false;
-    } catch (error) {
-      console.error(`Ошибка при открытии формы создания: ${error.message}`);
+    } catch (_error) {
       return false;
     }
   }
@@ -117,203 +92,209 @@ class TasksPage extends BasePage {
     const taskTitle = title || `Task ${Date.now()} ${Math.random().toString(36).substr(2, 5)}`;
     const taskContent = content || `Description of ${taskTitle}`;
     
-    console.log(`Создаем задачу: "${taskTitle}"`);
-    
     try {
-      // Открываем форму
       const formOpened = await this.openCreateForm();
       if (!formOpened) {
-        console.log('Не удалось открыть форму создания');
         return null;
       }
       
-      await helpers.waitForTimeout(1000);
+      await this.titleField.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
       
-      // Заполняем Title (обязательное)
-      if (await this.titleField.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await this.titleField.fill(taskTitle);
-        console.log('Поле Title заполнено');
-      } else {
-        console.log('Поле Title не найдено');
+      const isTitleVisible = await this.titleField.isVisible({ timeout: 5000 }).catch(() => false);
+      if (!isTitleVisible) {
         return null;
       }
+      await this.titleField.fill(taskTitle);
+      await this.titleField.waitFor({ state: 'attached' }).catch(() => null);
       
-      await helpers.waitForTimeout(500);
-      
-      // Заполняем Assignee (если есть и обязательное) - ВАЖНО: используем значения из скриншотов
-      if (await this.assigneeField.isVisible({ timeout: 2000 }).catch(() => false)) {
-        // Если это select
-        if (await this.assigneeField.evaluate(el => el.tagName === 'SELECT')) {
-          // Пробуем выбрать конкретного пользователя из скриншотов
-          try {
-            await this.assigneeField.selectOption({ label: 'emily@example.com' });
-            console.log('Assignee выбран: emily@example.com');
-          } catch (error) {
-            // Если не нашли, пробуем другого
+      const isAssigneeVisible = await this.assigneeField.isVisible({ timeout: 2000 }).catch(() => false);
+      if (isAssigneeVisible) {
+        const isSelect = await this.assigneeField.evaluate(el => el.tagName === 'SELECT');
+        if (isSelect) {
+          const assigneeOptions = ['emily@example.com', 'michael@example.com'];
+          let selected = false;
+          for (const option of assigneeOptions) {
             try {
-              await this.assigneeField.selectOption({ label: 'michael@example.com' });
-              console.log('Assignee выбран: michael@example.com');
-            } catch (error2) {
-              // Выбираем первую опцию
-              const options = await this.assigneeField.locator('option:not([value=""])').count();
-              if (options > 0) {
-                await this.assigneeField.selectOption({ index: 1 });
-                console.log('Assignee выбран (первая опция)');
-              }
+              await this.assigneeField.selectOption({ label: option });
+              selected = true;
+              break;
+            } catch (_error) {
+              continue;
+            }
+          }
+          if (!selected) {
+            const options = await this.assigneeField.locator('option:not([value=""])').count();
+            if (options > 0) {
+              await this.assigneeField.selectOption({ index: 1 });
             }
           }
         } else {
-          // Для input просто кликаем
           await this.assigneeField.click();
         }
       }
       
-      await helpers.waitForTimeout(500);
-      
-      // Заполняем Status (если есть и обязательное) - ВАЖНО: используем значения из скриншотов
-      if (await this.statusField.isVisible({ timeout: 2000 }).catch(() => false)) {
-        if (await this.statusField.evaluate(el => el.tagName === 'SELECT')) {
-          // Пробуем выбрать конкретный статус из скриншотов
-          try {
-            await this.statusField.selectOption({ label: 'Draft' });
-            console.log('Status выбран: Draft');
-          } catch (error) {
+      const isStatusVisible = await this.statusField.isVisible({ timeout: 2000 }).catch(() => false);
+      if (isStatusVisible) {
+        const isSelect = await this.statusField.evaluate(el => el.tagName === 'SELECT');
+        if (isSelect) {
+          const statusOptions = ['Draft', 'Published'];
+          let selected = false;
+          for (const option of statusOptions) {
             try {
-              await this.statusField.selectOption({ label: 'Published' });
-              console.log('Status выбран: Published');
-            } catch (error2) {
-              // Выбираем первую опцию
-              const options = await this.statusField.locator('option:not([value=""])').count();
-              if (options > 0) {
-                await this.statusField.selectOption({ index: 1 });
-                console.log('Status выбран (первая опция)');
-              }
+              await this.statusField.selectOption({ label: option });
+              selected = true;
+              break;
+            } catch (_error) {
+              continue;
+            }
+          }
+          if (!selected) {
+            const options = await this.statusField.locator('option:not([value=""])').count();
+            if (options > 0) {
+              await this.statusField.selectOption({ index: 1 });
             }
           }
         }
       }
       
-      await helpers.waitForTimeout(500);
-      
-      // Заполняем Content (необязательное)
-      if (await this.contentField.isVisible({ timeout: 2000 }).catch(() => false)) {
+      const isContentVisible = await this.contentField.isVisible({ timeout: 2000 }).catch(() => false);
+      if (isContentVisible) {
         await this.contentField.fill(taskContent);
-        console.log('Поле Content заполнено');
       }
       
-      // Заполняем Label (необязательное) - используем значения из скриншотов
-      if (await this.labelField.isVisible({ timeout: 2000 }).catch(() => false)) {
-        if (await this.labelField.evaluate(el => el.tagName === 'SELECT')) {
-          try {
-            await this.labelField.selectOption({ label: 'bug' });
-            console.log('Label выбран: bug');
-          } catch (error) {
+      const isLabelVisible = await this.labelField.isVisible({ timeout: 2000 }).catch(() => false);
+      if (isLabelVisible) {
+        const isSelect = await this.labelField.evaluate(el => el.tagName === 'SELECT');
+        if (isSelect) {
+          const labelOptions = ['bug', 'feature'];
+          for (const option of labelOptions) {
             try {
-              await this.labelField.selectOption({ label: 'feature' });
-              console.log('Label выбран: feature');
-            } catch (error2) {
-              // Пропускаем, если не можем выбрать
-              console.log('Label не выбран');
+              await this.labelField.selectOption({ label: option });
+              break;
+            } catch (_error) {
+              continue;
             }
           }
         }
       }
       
-      await helpers.waitForTimeout(500);
-      
-      // Сохраняем
-      console.log('Сохраняем задачу...');
-      if (await this.saveButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      const isSaveVisible = await this.saveButton.isVisible({ timeout: 2000 }).catch(() => false);
+      if (isSaveVisible) {
         await this.saveButton.click();
       } else {
-        // Пробуем нажать Enter
         await this.page.keyboard.press('Enter');
       }
       
-      // Ждем создания - УВЕЛИЧИВАЕМ ВРЕМЯ ОЖИДАНИЯ
-      await helpers.waitForTimeout(5000);
+      await this.page.waitForLoadState('networkidle');
       
-      // Проверяем успешность создания
       const currentUrl = this.page.url();
+      const isOnListPage = currentUrl.includes('/tasks') || currentUrl.includes('/kanban') || !currentUrl.includes('/create');
       
-      // Если мы остались на той же странице или вернулись к списку задач
-      if (currentUrl.includes('/tasks') || currentUrl.includes('/kanban') || !currentUrl.includes('/create')) {
-        console.log(`Задача "${taskTitle}" создана, возвращаемся на страницу задач`);
+      if (isOnListPage) {
+        await this.createButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
         return { title: taskTitle, content: taskContent };
       }
       
-      // Проверяем уведомление
-      if (await this.snackbar.isVisible({ timeout: 3000 }).catch(() => false)) {
-        console.log('Уведомление о создании получено');
+      const isSnackbarVisible = await this.snackbar.isVisible({ timeout: 5000 }).catch(() => false);
+      if (isSnackbarVisible) {
+        await this.snackbar.waitFor({ state: 'visible', timeout: 3000 }).catch(() => null);
+        await this.goto();
+        await this.page.waitForLoadState('networkidle');
         return { title: taskTitle, content: taskContent };
       }
       
-      console.log('Предполагаем, что задача создана');
+      await this.goto();
+      await this.page.waitForLoadState('networkidle');
+      await this.createButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
+      
       return { title: taskTitle, content: taskContent };
       
-    } catch (error) {
-      console.error(`Ошибка при создании задачи: ${error.message}`);
+    } catch (_error) {
       return null;
     }
   }
 
   async findTask(taskTitle) {
-    console.log(`Ищем задачу: "${taskTitle}"`);
-    
     try {
       await this.goto();
-      await helpers.waitForTimeout(3000);
+      await this.page.waitForLoadState('networkidle');
+      await this.tableRows.first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
-      // Сначала проверим весь текст страницы
-      const pageText = await this.page.textContent('body', { timeout: 5000 }).catch(() => '');
-      
-      if (pageText && pageText.includes(taskTitle)) {
-        console.log(`Задача "${taskTitle}" найдена в тексте страницы`);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const tableRow = this.tableRows.filter({ hasText: taskTitle }).first();
+        const isTableRowVisible = await tableRow.isVisible({ timeout: 5000 }).catch(() => false);
+        if (isTableRowVisible) {
+          return tableRow;
+        }
         
-        // Пробуем найти конкретный элемент с этим текстом
-        const taskElements = this.page.locator(`:has-text("${taskTitle}")`);
-        const count = await taskElements.count();
-        
-        for (let i = 0; i < count; i++) {
-          const element = taskElements.nth(i);
+        const tableRowCount = await this.tableRows.count();
+        for (let i = 0; i < tableRowCount; i++) {
+          const row = this.tableRows.nth(i);
           try {
-            if (await element.isVisible({ timeout: 1000 })) {
-              console.log(`Задача найдена как видимый элемент #${i}`);
-              return element;
+            const rowText = await row.textContent({ timeout: 2000 });
+            if (rowText && rowText.includes(taskTitle)) {
+              return row;
             }
-          } catch (error) {
-            // Продолжаем поиск
+          } catch (_error) {
+            continue;
           }
         }
         
-        // Если не нашли видимый элемент, возвращаем первый
-        if (count > 0) {
-          console.log(`Возвращаем первый элемент с текстом "${taskTitle}"`);
-          return taskElements.first();
-        }
-      }
-      
-      // Пробуем найти в карточках задач
-      const cardCount = await this.taskCards.count();
-      console.log(`Проверяем ${cardCount} карточек задач`);
-      
-      for (let i = 0; i < cardCount; i++) {
-        const card = this.taskCards.nth(i);
-        try {
-          const cardText = await card.textContent();
-          if (cardText && cardText.includes(taskTitle)) {
-            console.log(`Задача найдена в карточке #${i}`);
-            return card;
+        const pageText = await this.page.textContent('body', { timeout: 5000 }).catch(() => '');
+        
+        if (pageText && pageText.includes(taskTitle)) {
+          const exactTextMatch = this.page.locator(`text="${taskTitle}"`).first();
+          const isExactMatchVisible = await exactTextMatch.isVisible({ timeout: 3000 }).catch(() => false);
+          if (isExactMatchVisible) {
+            const parent = exactTextMatch.locator('xpath=..').first();
+            const parentTag = await parent.evaluate(el => el.tagName).catch(() => '');
+            if (parentTag === 'TR' || parentTag === 'TD') {
+              return parent;
+            }
+            return exactTextMatch;
           }
-        } catch (error) {
-          // Продолжаем поиск
+          
+          const allTaskElements = this.page.locator(`:has-text("${taskTitle}")`);
+          const count = await allTaskElements.count();
+          
+          for (let i = 0; i < count; i++) {
+            const element = allTaskElements.nth(i);
+            try {
+              if (await element.isVisible({ timeout: 2000 })) {
+                const tagName = await element.evaluate(el => el.tagName).catch(() => '');
+                if (tagName === 'TR' || tagName === 'TD') {
+                  return element;
+                }
+              }
+            } catch (_error) {
+              continue;
+            }
+          }
+        }
+        
+        const cardCount = await this.taskCards.count();
+        for (let i = 0; i < cardCount; i++) {
+          const card = this.taskCards.nth(i);
+          try {
+            const cardText = await card.textContent({ timeout: 2000 });
+            if (cardText && cardText.includes(taskTitle)) {
+              return card;
+            }
+          } catch (_error) {
+            continue;
+          }
+        }
+        
+        if (attempt < 2) {
+          await this.page.waitForLoadState('networkidle');
+          await this.goto();
+          await this.page.waitForLoadState('networkidle');
+          await this.tableRows.first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
         }
       }
       
-      console.log(`Задача "${taskTitle}" не найдена`);
       return null;
-    } catch (error) {
-      console.error(`Ошибка при поиске задачи: ${error.message}`);
+    } catch (_error) {
       return null;
     }
   }
@@ -324,150 +305,149 @@ class TasksPage extends BasePage {
   }
 
   async editTask(oldTitle, newTitle = null, newContent = null) {
-    console.log(`Редактируем задачу: "${oldTitle}" -> "${newTitle}"`);
-    
     try {
-      // Находим задачу
       const taskElement = await this.findTask(oldTitle);
       if (!taskElement) {
-        console.log(`Задача "${oldTitle}" не найдена для редактирования`);
         return null;
       }
       
-      // Кликаем по задаче
-      await taskElement.click();
-      await helpers.waitForTimeout(2000);
+      await taskElement.click({ force: true });
+      await this.page.waitForLoadState('networkidle');
+      await this.editButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
       
-      // Ищем кнопку Edit
-      if (await this.editButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await this.editButton.click();
-        await helpers.waitForTimeout(2000);
-        
-        // Ждем загрузки формы редактирования и заполняем данные
-        if (newTitle && await this.titleField.isVisible({ timeout: 3000 }).catch(() => false)) {
-          await this.titleField.fill('');
-          await helpers.waitForTimeout(500);
-          await this.titleField.fill(newTitle);
-          console.log(`Заголовок изменен на: "${newTitle}"`);
-        }
-        
-        if (newContent && await this.contentField.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await this.contentField.fill('');
-          await helpers.waitForTimeout(500);
-          await this.contentField.fill(newContent);
-          console.log('Описание обновлено');
-        }
-        
-        // Сохраняем изменения
-        if (await this.saveButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await this.saveButton.click();
-          await helpers.waitForTimeout(3000);
-          
-          console.log(`Задача отредактирована: "${oldTitle}" -> "${newTitle}"`);
-          return { title: newTitle || oldTitle, content: newContent };
+      const isEditVisible = await this.editButton.isVisible({ timeout: 5000 }).catch(() => false);
+      if (!isEditVisible) {
+        const editLink = this.page.locator('a:has-text("Edit")').first();
+        const isEditLinkVisible = await editLink.isVisible({ timeout: 2000 }).catch(() => false);
+        if (isEditLinkVisible) {
+          await editLink.click();
         } else {
-          console.log('Кнопка Save не найдена при редактировании');
           return null;
         }
       } else {
-        console.log('Кнопка Edit не найдена');
+        await this.editButton.click();
+      }
+      
+      await this.page.waitForLoadState('networkidle');
+      await this.titleField.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
+      
+      if (newTitle) {
+        const isTitleVisible = await this.titleField.isVisible({ timeout: 3000 }).catch(() => false);
+        if (isTitleVisible) {
+          await this.titleField.fill('');
+          await this.titleField.fill(newTitle);
+        }
+      }
+      
+      if (newContent) {
+        const isContentVisible = await this.contentField.isVisible({ timeout: 2000 }).catch(() => false);
+        if (isContentVisible) {
+          await this.contentField.fill('');
+          await this.contentField.fill(newContent);
+        }
+      }
+      
+      const isSaveVisible = await this.saveButton.isVisible({ timeout: 2000 }).catch(() => false);
+      if (!isSaveVisible) {
         return null;
       }
-    } catch (error) {
-      console.error(`Ошибка при редактировании задачи: ${error.message}`);
+      
+      await this.saveButton.click();
+      await this.page.waitForLoadState('networkidle');
+      
+      return { title: newTitle || oldTitle, content: newContent };
+    } catch (_error) {
       await this.goto();
       return null;
     }
   }
 
   async deleteTask(taskTitle) {
-    console.log(`Удаляем задачу: "${taskTitle}"`);
-    
     try {
-      // Находим задачу
       const taskElement = await this.findTask(taskTitle);
       if (!taskElement) {
-        console.log(`Задача "${taskTitle}" не найдена для удаления`);
         return false;
       }
       
-      // Кликаем по задаче
-      await taskElement.click();
-      await helpers.waitForTimeout(2000);
+      await taskElement.click({ force: true });
+      await this.page.waitForLoadState('networkidle');
+      await this.deleteButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
       
-      // Ищем кнопку Delete
-      if (await this.deleteButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await this.deleteButton.click();
-        await helpers.waitForTimeout(1000);
-        
-        // Подтверждаем удаление
-        if (await this.confirmDeleteButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await this.confirmDeleteButton.click();
+      const isDeleteVisible = await this.deleteButton.isVisible({ timeout: 5000 }).catch(() => false);
+      if (!isDeleteVisible) {
+        const deleteLink = this.page.locator('a:has-text("Delete"), button[aria-label*="Delete"]').first();
+        const isDeleteLinkVisible = await deleteLink.isVisible({ timeout: 2000 }).catch(() => false);
+        if (isDeleteLinkVisible) {
+          await deleteLink.click();
+        } else {
+          return false;
         }
-        
-        // Ждем уведомления об удалении
-        await helpers.waitForTimeout(2000);
-        
-        // Проверяем наличие уведомления об удалении
-        if (await this.snackbar.isVisible({ timeout: 3000 }).catch(() => false)) {
-          const snackbarText = await this.snackbar.textContent().catch(() => '');
-          if (snackbarText.includes('deleted') || snackbarText.includes('Deleted') || 
-              snackbarText.includes('Element deleted')) {
-            console.log('Уведомление об удалении получено');
-          }
-          
-          // Если есть кнопка UNDO, можем ее нажать для отмены удаления
-          if (await this.undoButton.isVisible({ timeout: 1000 }).catch(() => false)) {
-            console.log('Кнопка UNDO доступна');
-          }
-        }
-        
-        await helpers.waitForTimeout(2000);
-        await this.goto();
-        
-        return true;
       } else {
-        console.log('Кнопка Delete не найдена');
-        return false;
+        await this.deleteButton.click();
       }
-    } catch (error) {
-      console.error(`Ошибка при удалении задачи: ${error.message}`);
+      
+      await this.confirmDeleteButton.waitFor({ state: 'visible', timeout: 3000 }).catch(() => null);
+      
+      const isConfirmVisible = await this.confirmDeleteButton.isVisible({ timeout: 3000 }).catch(() => false);
+      if (isConfirmVisible) {
+        await this.confirmDeleteButton.click();
+      }
+      
+      await this.page.waitForLoadState('networkidle');
+      await this.goto();
+      await this.page.waitForLoadState('networkidle');
+      
+      return true;
+    } catch (_error) {
       await this.goto();
       return false;
     }
   }
 
   async massDeleteTasks() {
-    console.log('Массовое удаление не поддерживается в канбан-доске');
     return false;
   }
 
-  async moveTaskBetweenColumns(taskTitle, fromColumn, toColumn) {
-    console.log(`Перемещение задачи "${taskTitle}" не реализовано`);
+  async moveTaskBetweenColumns(_taskTitle, _fromColumn, _toColumn) {
     return false;
   }
 
-  async changeTaskStatus(taskTitle, newStatus) {
-    console.log(`Смена статуса задачи "${taskTitle}" не реализована`);
+  async changeTaskStatus(_taskTitle, _newStatus) {
     return null;
   }
 
   async isCreateButtonAvailable() {
     await this.goto();
-    await helpers.waitForTimeout(1000);
+    await this.page.waitForLoadState('networkidle');
     return await this.createButton.isVisible({ timeout: 5000 }).catch(() => false);
   }
 
   async getTaskCount() {
     await this.goto();
-    await helpers.waitForTimeout(1000);
-    return await this.taskCards.count();
+    await this.page.waitForLoadState('networkidle');
+    await this.tableRows.first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
+    
+    const tableCount = await this.tableRows.count();
+    const cardCount = await this.taskCards.count();
+    return Math.max(tableCount, cardCount);
   }
 
   async getColumnCount() {
     await this.goto();
-    await helpers.waitForTimeout(1000);
-    return await this.kanbanColumns.count();
+    await this.page.waitForLoadState('networkidle');
+    await this.page.locator('table, .column, [class*="column"]').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
+    
+    const columnCount = await this.kanbanColumns.count();
+    if (columnCount > 0) {
+      return columnCount;
+    }
+    
+    const tableVisible = await this.page.locator('table').isVisible({ timeout: 2000 }).catch(() => false);
+    if (tableVisible) {
+      return 1;
+    }
+    
+    return 0;
   }
 }
 

@@ -13,8 +13,7 @@ class BasePage {
         await selector.waitFor({ state: 'visible', timeout });
       }
       return true;
-    } catch (error) {
-      console.error(`Element not found: ${selector}`);
+    } catch (_error) {
       return false;
     }
   }
@@ -29,7 +28,7 @@ class BasePage {
     } else {
       await selector.click();
     }
-    await this.page.waitForTimeout(300);
+    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
   }
 
   async fill(selector, text, timeout = 30000) {
@@ -42,7 +41,7 @@ class BasePage {
     } else {
       await selector.fill(text);
     }
-    await this.page.waitForTimeout(300);
+    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
   }
 
   async navigateTo(url) {
@@ -81,7 +80,7 @@ class BasePage {
     } else {
       await selector.selectOption(value);
     }
-    await this.page.waitForTimeout(300);
+    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
   }
 
   async check(selector) {
@@ -94,7 +93,7 @@ class BasePage {
     } else {
       await selector.check();
     }
-    await this.page.waitForTimeout(300);
+    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
   }
 
   async uncheck(selector) {
@@ -107,7 +106,7 @@ class BasePage {
     } else {
       await selector.uncheck();
     }
-    await this.page.waitForTimeout(300);
+    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
   }
 
   async getValue(selector) {
@@ -199,7 +198,7 @@ class BasePage {
       throw new Error('Source or target element not visible for drag and drop');
     }
     await source.dragTo(target);
-    await this.page.waitForTimeout(500);
+    await this.page.waitForLoadState('networkidle').catch(() => null);
   }
 
   async hover(selector) {
@@ -212,7 +211,7 @@ class BasePage {
     } else {
       await selector.hover();
     }
-    await this.page.waitForTimeout(300);
+    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
   }
 
   async rightClick(selector) {
@@ -225,7 +224,7 @@ class BasePage {
     } else {
       await selector.click({ button: 'right' });
     }
-    await this.page.waitForTimeout(300);
+    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
   }
 
   async doubleClick(selector) {
@@ -238,7 +237,7 @@ class BasePage {
     } else {
       await selector.dblclick();
     }
-    await this.page.waitForTimeout(300);
+    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
   }
 
   async focus(selector) {

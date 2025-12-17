@@ -16,7 +16,7 @@ class DashboardPage extends BasePage {
   async logout() {
     try {
       await this.profileButton.click();
-      await this.page.waitForTimeout(1000);
+      await this.page.waitForLoadState('networkidle');
       await this.logoutButton.click({ force: true });
       await this.page.waitForURL('**/login', { timeout: 10000 });
       return true;

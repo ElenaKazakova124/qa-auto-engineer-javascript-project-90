@@ -2,7 +2,6 @@ import { expect } from '@playwright/test'
 import constants from './constants.js'
 
 class Helpers {
-  // ==================== ГЕНЕРАЦИЯ ДАННЫХ ====================
   static generateEmail(prefix = 'test') {
     return `${prefix}${Date.now()}@example.com`;
   }
@@ -19,7 +18,6 @@ class Helpers {
     return `${prefix} ${Date.now()}`;
   }
 
-  // ==================== АВТОРИЗАЦИЯ ====================
   static async login(page, username = 'admin', password = 'admin') {
     try {
       await page.goto('/login');
@@ -45,9 +43,8 @@ class Helpers {
       const profileButton = page.locator(`button:has-text("${constants.mainPageElements.profileButtonLabel}")`).first();
       await profileButton.click();
       
-      await this.waitForTimeout(1000);
-      
       const logoutButton = page.locator(`text="${constants.mainPageElements.logoutButtonLabel}"`).first();
+      await logoutButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
       await logoutButton.click({ force: true });
       
       await page.waitForLoadState('networkidle');
@@ -61,7 +58,6 @@ class Helpers {
     }
   }
 
-  // ==================== НАВИГАЦИЯ ====================
   static async navigateTo(page, section) {
     const sections = {
       dashboard: 'Dashboard',
@@ -82,19 +78,18 @@ class Helpers {
         const menuButton = page.locator('button[aria-label="menu"], button[aria-label="open drawer"]');
         if (await menuButton.isVisible({ timeout: 3000 })) {
           await menuButton.click();
-          await this.waitForTimeout(500);
+          await menuItem.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
         }
       }
       
       await menuItem.click();
       await page.waitForLoadState('networkidle');
-      await this.waitForTimeout(1000);
+      await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
     } catch (_) {
       throw new Error(`Ошибка навигации в раздел ${section}`);
     }
   }
 
-  // ==================== ОСНОВНЫЕ ДЕЙСТВИЯ ====================
   static async clickCreate(page) {
     try {
       const createButton = page.locator('a:has-text("Create"), button:has-text("Create")').first();
@@ -154,7 +149,7 @@ class Helpers {
         
         if (await field.isVisible({ timeout: 5000 }).catch(() => false)) {
           await field.fill(value.toString());
-          await page.waitForTimeout(100);
+          await page.waitForLoadState('domcontentloaded').catch(() => null);
         }
       }
     }
@@ -165,16 +160,14 @@ class Helpers {
       const dropdown = page.getByLabel(dropdownLabel);
       await dropdown.click();
       
-      await this.waitForTimeout(500);
-      
       const option = page.getByRole('option', { name: optionText });
+      await option.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
       await option.click();
     } catch (_) {
       throw new Error('Ошибка выбора опции');
     }
   }
 
-  // ==================== ПРОВЕРКИ ====================
   static async verifyFormFields(page, expectedFields) {
     for (const field of expectedFields) {
       let fieldLocator = page.locator(`input[name="${field}"], textarea[name="${field}"]`).first();
@@ -213,7 +206,6 @@ class Helpers {
     }
   }
 
-  // ==================== УТИЛИТЫ ====================
   static async waitForTimeout(ms = 1000) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -221,14 +213,13 @@ class Helpers {
   static async waitForPageLoad(page) {
     await page.waitForLoadState('networkidle');
     await page.waitForLoadState('domcontentloaded');
-    await this.waitForTimeout(500);
+    await page.locator('body').waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
   }
 
   static async getRowCount(page) {
     return await page.locator('tbody tr').count();
   }
 
-  // ==================== СОЗДАНИЕ ТЕСТОВЫХ ДАННЫХ ====================
   static async createTestData(page, type, data = {}) {
     const testData = {
       user: {
@@ -260,12 +251,11 @@ class Helpers {
     return testData[type];
   }
 
-  // ==================== МАССОВОЕ УДАЛЕНИЕ ====================
   static async massDelete(page) {
     const selectAllCheckbox = page.locator('thead input[type="checkbox"]').first();
     if (await selectAllCheckbox.isVisible({ timeout: 5000 })) {
       await selectAllCheckbox.check();
-      await this.waitForTimeout(1000);
+      await page.waitForLoadState('domcontentloaded').catch(() => null);
       
       const deleteSelectedButton = page.locator(`button:has-text("Delete selected")`).first();
       if (await deleteSelectedButton.isVisible({ timeout: 3000 })) {
@@ -274,22 +264,20 @@ class Helpers {
         const confirmButton = page.locator(`button:has-text("Confirm")`).first();
         if (await confirmButton.isVisible({ timeout: 3000 })) {
           await confirmButton.click();
-          await this.waitForTimeout(2000);
+          await page.waitForLoadState('networkidle').catch(() => null);
         }
       }
     }
   }
 
-  // ==================== ФИЛЬТРАЦИЯ ЗАДАЧ ====================
   static async filterTasks(page, searchText) {
     const searchInput = page.locator(`input[placeholder*="Search"]`).first();
     if (await searchInput.isVisible({ timeout: 5000 })) {
       await searchInput.fill(searchText);
-      await this.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle').catch(() => null);
     }
   }
 
-  // ==================== ПЕРЕМЕЩЕНИЕ ЗАДАЧИ МЕЖДУ КОЛОНКАМИ ====================
   static async moveTaskBetweenColumns(page, taskName, fromColumn, toColumn) {
     const sourceColumn = page.locator(`.kanban-column:has-text("${fromColumn}"), .column:has-text("${fromColumn}")`).first();
     const taskCard = sourceColumn.locator(`.task-card:has-text("${taskName}"), .card:has-text("${taskName}")`).first();
@@ -298,9 +286,9 @@ class Helpers {
     
     if (await taskCard.isVisible() && await targetColumn.isVisible()) {
       await taskCard.hover();
-      await this.waitForTimeout(500);
+      await page.waitForLoadState('domcontentloaded').catch(() => null);
       await taskCard.dragTo(targetColumn);
-      await this.waitForTimeout(2000);
+      await page.waitForLoadState('networkidle').catch(() => null);
       
       return await targetColumn.locator(`.task-card:has-text("${taskName}"), .card:has-text("${taskName}")`).isVisible({ timeout: 5000 }).catch(() => false);
     }

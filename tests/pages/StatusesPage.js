@@ -1,5 +1,4 @@
 import BasePage from './BasePage.js';
-import constants from '../utils/constants.js';
 import helpers from '../utils/helpers.js';
 
 class StatusesPage extends BasePage {
@@ -29,14 +28,11 @@ class StatusesPage extends BasePage {
         timeout: 60000 
       });
       await helpers.waitForPageLoad(this.page);
-      await helpers.waitForTimeout(2000);
-    } catch (error) {
-      console.log('Не удалось перейти по URL, пробуем через меню');
+    } catch (_error) {
       try {
         await this.page.locator('a:has-text("Task statuses")').first().click({ timeout: 15000 });
         await helpers.waitForPageLoad(this.page);
-        await helpers.waitForTimeout(1000);
-      } catch (e) {
+      } catch (_e) {
         throw new Error('Не удалось перейти на страницу статусов');
       }
     }
@@ -56,14 +52,11 @@ class StatusesPage extends BasePage {
     const statusName = name || `Status${Date.now()}`;
     const statusSlug = slug || `status-${Date.now()}`;
     
-    console.log(`Создаем статус: ${statusName}, slug: ${statusSlug}`);
-    
     try {
       await this.openCreateForm();
-    } catch (error) {
-      console.log('Не удалось открыть форму создания, пробуем другой способ');
+    } catch (_error) {
       await this.goto();
-      await helpers.waitForTimeout(2000);
+      await this.page.waitForLoadState('networkidle');
       
       if (await this.createButton.isVisible({ timeout: 5000 })) {
         await this.createButton.click();
@@ -79,37 +72,32 @@ class StatusesPage extends BasePage {
     await this.fill(this.slugInput, statusSlug);
     await this.click(this.saveButton);
     await helpers.waitForPageLoad(this.page);
-    await helpers.waitForTimeout(3000);
     
-    console.log(`Статус ${statusName} создан`);
     return { name: statusName, slug: statusSlug };
   }
 
   async editStatus(oldName, newName, newSlug = null) {
     await this.goto();
-    await helpers.waitForTimeout(3000);
+    await this.page.waitForLoadState('networkidle');
     
-    console.log(`Ищем статус для редактирования: ${oldName}`);
     
     if (!await this.isStatusVisible(oldName, 10000)) {
-      console.log(`Статус ${oldName} не найден, создаем его`);
       const slug = `slug-${Date.now()}`;
       await this.createStatus(oldName, slug);
-      await helpers.waitForTimeout(2000);
+      await this.page.waitForLoadState('networkidle');
       await this.goto();
-      await helpers.waitForTimeout(2000);
+      await this.page.waitForLoadState('networkidle');
     }
     
     const statusRow = this.page.locator('tbody tr').filter({ hasText: oldName }).first();
     
     if (await statusRow.isVisible({ timeout: 15000 })) {
-      console.log(`Статус ${oldName} найден, кликаем для редактирования`);
       
       await statusRow.click({ force: true });
       
       await this.waitForElement(this.nameInput, 20000);
       await this.waitForElement(this.slugInput, 20000);
-      await helpers.waitForTimeout(2000);
+      await this.page.waitForLoadState('networkidle');
       await this.clear(this.nameInput);
       await this.fill(this.nameInput, newName);
       
@@ -127,94 +115,77 @@ class StatusesPage extends BasePage {
       await this.click(this.saveButton);
       
       await helpers.waitForPageLoad(this.page);
-      await helpers.waitForTimeout(3000);
+      await this.page.waitForLoadState('networkidle');
       
       await this.goto();
-      await helpers.waitForTimeout(2000);
+      await this.page.locator('tbody tr').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
-      console.log(`Статус отредактирован: ${oldName} -> ${newName}`);
       return { name: newName, slug: newSlug };
     } else {
-      console.log(`Статус ${oldName} не найден в таблице`);
       return { name: oldName }; 
     }
   }
 
   async deleteStatus(statusName) {
     await this.goto();
-    await helpers.waitForTimeout(2000);
+    await this.page.waitForLoadState('networkidle');
     
-    console.log(`Пытаемся удалить статус: ${statusName}`);
     
     if (!await this.isStatusVisible(statusName, 10000)) {
-      console.log(`Статус ${statusName} не найден, создаем его`);
       const slug = `slug-${Date.now()}`;
       await this.createStatus(statusName, slug);
-      await helpers.waitForTimeout(2000);
+      await this.page.waitForLoadState('networkidle');
       await this.goto();
-      await helpers.waitForTimeout(2000);
+      await this.page.waitForLoadState('networkidle');
     }
     
     const statusRow = this.page.locator('tbody tr').filter({ hasText: statusName }).first();
     
     if (await statusRow.isVisible({ timeout: 15000 })) {
-      console.log(`Статус ${statusName} найдена`);
       
       const checkbox = statusRow.locator('td:first-child input[type="checkbox"]').first();
       
       if (await checkbox.isVisible({ timeout: 5000 })) {
-        console.log('Чекбокс найден, отмечаем его');
         
         await checkbox.check({ force: true });
-        await helpers.waitForTimeout(1500);
+        await this.page.waitForLoadState('networkidle');
         
         const bulkDeleteButton = this.page.locator('button:has-text("Delete"):visible').first();
         
         if (await bulkDeleteButton.isVisible({ timeout: 5000 })) {
-          console.log('Кнопка Delete найдена, нажимаем');
           
           await bulkDeleteButton.click();
-          await helpers.waitForTimeout(2000);
+          await this.page.waitForLoadState('networkidle');
           
-          console.log('Ждем уведомление об удалении...');
           
           try {
             await this.waitForElement(this.snackbar, 10000);
-            console.log('Уведомление об удалении появилось');
-          } catch (error) {
-            console.log('Уведомление не появилось');
+          } catch (_error) {
           }
           
           try {
             await statusRow.waitFor({ state: 'hidden', timeout: 5000 });
-            console.log('Строка со статусом исчезла из таблицы');
-          } catch (error) {
-            console.log('Строка не исчезла сразу, обновляем страницу');
+          } catch (_error) {
             await this.goto();
-            await helpers.waitForTimeout(2000);
+            await this.page.waitForLoadState('networkidle');
           }
           
-          console.log(`Статус ${statusName} успешно удален`);
           return true;
         } else {
-          console.log('Кнопка Delete не появилась');
           return false;
         }
       } else {
-        console.log('Чекбокс не найден');
         return false;
       }
     } else {
-      console.log(`Статус ${statusName} не найден в таблице`);
       return false;
     }
   }
 
   async massDeleteStatuses() {
     await this.goto();
-    await helpers.waitForTimeout(2000);
+    await this.page.waitForLoadState('networkidle');
     
-    console.log('Начинаем массовое удаление статусов');
     
     const testStatuses = [];
     for (let i = 1; i <= 3; i++) {
@@ -222,68 +193,61 @@ class StatusesPage extends BasePage {
       const statusSlug = `test-status-${i}-${Date.now()}`;
       await this.createStatus(statusName, statusSlug);
       testStatuses.push(statusName);
-      await helpers.waitForTimeout(1000);
+      await this.page.waitForLoadState('networkidle');
     }
     
-    await helpers.waitForTimeout(2000);
+    await this.page.waitForLoadState('networkidle');
     await this.goto();
-    await helpers.waitForTimeout(2000);
+    await this.page.waitForLoadState('networkidle');
     
     for (const statusName of testStatuses) {
       const statusRow = this.page.locator('tbody tr').filter({ hasText: statusName }).first();
       if (await statusRow.isVisible({ timeout: 5000 })) {
         const checkbox = statusRow.locator('td:first-child input[type="checkbox"]').first();
         await checkbox.check({ force: true });
-        await helpers.waitForTimeout(500);
+        await this.page.waitForLoadState('networkidle');
       }
     }
     
     const bulkDeleteButton = this.page.locator('button:has-text("Delete"):visible').first();
     
     if (await bulkDeleteButton.isVisible({ timeout: 5000 })) {
-      console.log('Кнопка Delete найдена, нажимаем');
       
       await bulkDeleteButton.click();
-      await helpers.waitForTimeout(2000);
+      await this.page.waitForLoadState('networkidle');
       
       try {
         await this.waitForElement(this.snackbar, 10000);
-        console.log('Уведомление об удалении появилось');
-      } catch (error) {
-        console.log('Уведомление не появилось');
+      } catch (_error) {
       }
       
-      await helpers.waitForTimeout(3000);
+      await this.page.waitForLoadState('networkidle');
       
       await this.goto();
-      await helpers.waitForTimeout(2000);
+      await this.page.waitForLoadState('networkidle');
       
       let allDeleted = true;
       for (const statusName of testStatuses) {
         const isStillVisible = await this.isStatusVisible(statusName);
         if (isStillVisible) {
-          console.log(`Статус ${statusName} все еще виден`);
           allDeleted = false;
         }
       }
       
       return allDeleted;
     } else {
-      console.log('Кнопка Delete не появилась');
       return false;
     }
   }
 
   async getStatusCount() {
     const count = await this.tableRows.count();
-    console.log(`Текущее количество статусов: ${count}`);
     return count;
   }
 
   async isStatusVisible(statusName, timeout = 10000) {
     const statusRow = this.page.locator('tbody tr').filter({ hasText: statusName }).first();
     const isVisible = await statusRow.isVisible({ timeout }).catch(() => false);
-    console.log(`Статус ${statusName} видим: ${isVisible}`);
     return isVisible;
   }
 }

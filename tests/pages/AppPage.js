@@ -11,22 +11,21 @@ class AppPage extends BasePage {
   }
 
   get welcomeText() {
-    return this.page.locator(`text="${constants.mainPageElements.welcomeText}"`).first();
+    return this.page.getByText(constants.mainPageElements.welcomeText);
   }
 
   async waitForAppLoad(timeout = 15000) {
-    await this.page.waitForLoadState('networkidle', { timeout });
-    await this.page.waitForSelector('body', { timeout });
-    
+    await Promise.race([
+      this.signInButton.waitFor({ state: 'visible', timeout }),
+      this.welcomeText.waitFor({ state: 'visible', timeout })
+    ]);
   }
 
   async isAppLoaded() {
-    try {
-      const bodyText = await this.page.textContent('body', { timeout: 3000 });
-      return !!bodyText && bodyText.length > 0;
-    } catch {
-      return false;
-    }
+    return (
+      await this.signInButton.isVisible().catch(() => false) ||
+      await this.welcomeText.isVisible().catch(() => false)
+    );
   }
 }
 
