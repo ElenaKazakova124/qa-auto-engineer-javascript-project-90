@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import AppPage from '/Users/Elena/qa-auto-engineer-javascript-project-90/tests/pages/AppPage.js';
+import AppPage from './pages/AppPage.js';
 
 test('приложение загружается', async ({ page }) => {
   const app = new AppPage(page);
