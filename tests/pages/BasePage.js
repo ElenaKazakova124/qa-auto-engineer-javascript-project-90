@@ -14,13 +14,16 @@ class BasePage {
       }
       return true;
     } catch (error) {
-      await helpers.diagnosePageState(this.page, 'element-not-found');
-      throw error;
+      console.error(`Element not found: ${selector}`);
+      return false;
     }
   }
 
   async click(selector, timeout = 30000) {
-    await this.waitForElement(selector, timeout);
+    const isVisible = await this.waitForElement(selector, timeout);
+    if (!isVisible) {
+      throw new Error(`Element not visible for clicking: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.click(selector);
     } else {
@@ -30,7 +33,10 @@ class BasePage {
   }
 
   async fill(selector, text, timeout = 30000) {
-    await this.waitForElement(selector, timeout);
+    const isVisible = await this.waitForElement(selector, timeout);
+    if (!isVisible) {
+      throw new Error(`Element not visible for filling: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.fill(selector, text);
     } else {
@@ -45,7 +51,10 @@ class BasePage {
   }
 
   async getText(selector) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for getting text: ${selector}`);
+    }
     if (typeof selector === 'string') {
       return await this.page.textContent(selector);
     } else {
@@ -63,7 +72,10 @@ class BasePage {
   }
 
   async selectOption(selector, value) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for selecting option: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.selectOption(selector, value);
     } else {
@@ -73,7 +85,10 @@ class BasePage {
   }
 
   async check(selector) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for checking: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.check(selector);
     } else {
@@ -83,7 +98,10 @@ class BasePage {
   }
 
   async uncheck(selector) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for unchecking: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.uncheck(selector);
     } else {
@@ -93,7 +111,10 @@ class BasePage {
   }
 
   async getValue(selector) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for getting value: ${selector}`);
+    }
     if (typeof selector === 'string') {
       return await this.page.inputValue(selector);
     } else {
@@ -102,7 +123,10 @@ class BasePage {
   }
 
   async getAttribute(selector, attribute) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for getting attribute: ${selector}`);
+    }
     if (typeof selector === 'string') {
       return await this.page.getAttribute(selector, attribute);
     } else {
@@ -145,7 +169,10 @@ class BasePage {
   }
 
   async type(selector, text, options = {}) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for typing: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.type(selector, text, options);
     } else {
@@ -154,7 +181,10 @@ class BasePage {
   }
 
   async clear(selector) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for clearing: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.fill(selector, '');
     } else {
@@ -163,14 +193,20 @@ class BasePage {
   }
 
   async dragAndDrop(source, target) {
-    await this.waitForElement(source);
-    await this.waitForElement(target);
+    const isSourceVisible = await this.waitForElement(source);
+    const isTargetVisible = await this.waitForElement(target);
+    if (!isSourceVisible || !isTargetVisible) {
+      throw new Error('Source or target element not visible for drag and drop');
+    }
     await source.dragTo(target);
     await this.page.waitForTimeout(500);
   }
 
   async hover(selector) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for hovering: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.hover(selector);
     } else {
@@ -180,7 +216,10 @@ class BasePage {
   }
 
   async rightClick(selector) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for right clicking: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.click(selector, { button: 'right' });
     } else {
@@ -190,7 +229,10 @@ class BasePage {
   }
 
   async doubleClick(selector) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for double clicking: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.dblclick(selector);
     } else {
@@ -200,7 +242,10 @@ class BasePage {
   }
 
   async focus(selector) {
-    await this.waitForElement(selector);
+    const isVisible = await this.waitForElement(selector);
+    if (!isVisible) {
+      throw new Error(`Element not visible for focusing: ${selector}`);
+    }
     if (typeof selector === 'string') {
       await this.page.focus(selector);
     } else {

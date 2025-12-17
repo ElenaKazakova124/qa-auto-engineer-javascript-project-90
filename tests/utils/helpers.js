@@ -2,7 +2,7 @@ import { expect } from '@playwright/test'
 import constants from './constants.js'
 
 class Helpers {
-  // ГЕНЕРАЦИЯ ДАННЫХ 
+  // ==================== ГЕНЕРАЦИЯ ДАННЫХ ====================
   static generateEmail(prefix = 'test') {
     return `${prefix}${Date.now()}@example.com`;
   }
@@ -19,7 +19,7 @@ class Helpers {
     return `${prefix} ${Date.now()}`;
   }
 
-  // АВТОРИЗАЦИЯ 
+  // ==================== АВТОРИЗАЦИЯ ====================
   static async login(page, username = 'admin', password = 'admin') {
     try {
       await page.goto('/login');
@@ -61,7 +61,7 @@ class Helpers {
     }
   }
 
-  // НАВИГАЦИЯ
+  // ==================== НАВИГАЦИЯ ====================
   static async navigateTo(page, section) {
     const sections = {
       dashboard: 'Dashboard',
@@ -94,7 +94,7 @@ class Helpers {
     }
   }
 
-  // ОСНОВНЫЕ ДЕЙСТВИЯ
+  // ==================== ОСНОВНЫЕ ДЕЙСТВИЯ ====================
   static async clickCreate(page) {
     try {
       const createButton = page.locator('a:has-text("Create"), button:has-text("Create")').first();
@@ -174,7 +174,7 @@ class Helpers {
     }
   }
 
-  // ПРОВЕРКИ
+  // ==================== ПРОВЕРКИ ====================
   static async verifyFormFields(page, expectedFields) {
     for (const field of expectedFields) {
       let fieldLocator = page.locator(`input[name="${field}"], textarea[name="${field}"]`).first();
@@ -213,7 +213,7 @@ class Helpers {
     }
   }
 
-  // УТИЛИТЫ
+  // ==================== УТИЛИТЫ ====================
   static async waitForTimeout(ms = 1000) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -228,7 +228,7 @@ class Helpers {
     return await page.locator('tbody tr').count();
   }
 
-  // СОЗДАНИЕ ТЕСТОВЫХ ДАННЫХ
+  // ==================== СОЗДАНИЕ ТЕСТОВЫХ ДАННЫХ ====================
   static async createTestData(page, type, data = {}) {
     const testData = {
       user: {
@@ -260,7 +260,7 @@ class Helpers {
     return testData[type];
   }
 
-  // МАССОВОЕ УДАЛЕНИЕ 
+  // ==================== МАССОВОЕ УДАЛЕНИЕ ====================
   static async massDelete(page) {
     const selectAllCheckbox = page.locator('thead input[type="checkbox"]').first();
     if (await selectAllCheckbox.isVisible({ timeout: 5000 })) {
@@ -280,7 +280,7 @@ class Helpers {
     }
   }
 
-  // ФИЛЬТРАЦИЯ ЗАДАЧ 
+  // ==================== ФИЛЬТРАЦИЯ ЗАДАЧ ====================
   static async filterTasks(page, searchText) {
     const searchInput = page.locator(`input[placeholder*="Search"]`).first();
     if (await searchInput.isVisible({ timeout: 5000 })) {
@@ -289,38 +289,20 @@ class Helpers {
     }
   }
 
-  // ПЕРЕМЕЩЕНИЕ ЗАДАЧИ МЕЖДУ КОЛОНКАМИ
+  // ==================== ПЕРЕМЕЩЕНИЕ ЗАДАЧИ МЕЖДУ КОЛОНКАМИ ====================
   static async moveTaskBetweenColumns(page, taskName, fromColumn, toColumn) {
-    const sourceColumn = page.locator(`.kanban-column:has-text("${fromColumn}")`);
-    const taskCard = sourceColumn.locator(`.task-card:has-text("${taskName}")`);
+    const sourceColumn = page.locator(`.kanban-column:has-text("${fromColumn}"), .column:has-text("${fromColumn}")`).first();
+    const taskCard = sourceColumn.locator(`.task-card:has-text("${taskName}"), .card:has-text("${taskName}")`).first();
     
-    const targetColumn = page.locator(`.kanban-column:has-text("${toColumn}")`);
+    const targetColumn = page.locator(`.kanban-column:has-text("${toColumn}"), .column:has-text("${toColumn}")`).first();
     
-    await taskCard.dragTo(targetColumn);
-    await this.waitForTimeout(2000);
-    
-    await targetColumn.locator(`.task-card:has-text("${taskName}")`).isVisible({ timeout: 5000 }).catch(() => false);
-  }
-
-  // ПРОВЕРКА СПИСКА ЭЛЕМЕНТОВ
-  static async verifyListDisplay(page, items) {
-    for (const item of items) {
-      await this.shouldSee(page, item);
-    }
-  }
-
-  // ВАЛИДАЦИЯ EMAIL 
-  static async testEmailValidation(page, invalidEmail) {
-    const emailField = page.locator('input[name="email"]').first();
-    await emailField.fill(invalidEmail);
-    
-    const saveButton = page.locator(`button:has-text("Save")`).first();
-    await saveButton.click();
-    
-    const errorMessage = page.locator('.error, .Mui-error, [role="alert"]');
-    if (await errorMessage.isVisible({ timeout: 3000 })) {
-      await errorMessage.textContent();
-      return true;
+    if (await taskCard.isVisible() && await targetColumn.isVisible()) {
+      await taskCard.hover();
+      await this.waitForTimeout(500);
+      await taskCard.dragTo(targetColumn);
+      await this.waitForTimeout(2000);
+      
+      return await targetColumn.locator(`.task-card:has-text("${taskName}"), .card:has-text("${taskName}")`).isVisible({ timeout: 5000 }).catch(() => false);
     }
     
     return false;

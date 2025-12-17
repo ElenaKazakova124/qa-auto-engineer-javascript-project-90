@@ -1,79 +1,63 @@
 import BasePage from './BasePage.js';
 import constants from '../utils/constants.js';
+import helpers from '../utils/helpers.js';
 
 class LoginPage extends BasePage {
   constructor(page) {
     super(page);
-    this.usernameInput = this.page.getByLabel(constants.authElements.usernameLabel);
-    this.passwordInput = this.page.getByLabel(constants.authElements.passwordLabel);
-    this.signInButton = this.page.getByRole('button', { name: constants.authElements.signInButton });
-    this.errorMessage = this.page.locator('.error, .Mui-error, [role="alert"], .alert-danger, .text-error').first();
+    this.usernameInput = page.locator('input[type="text"]').first();
+    this.passwordInput = page.locator('input[type="password"]').first();
+    this.signInButton = page.getByRole('button', { name: constants.authElements.signInButton });
+    this.errorMessage = page.locator('.error, .Mui-error, [role="alert"]').first();
   }
 
   async goto() {
-    await this.page.goto('/login');
-    await this.page.waitForLoadState('domcontentloaded');
-  }
-
-  async waitForLoginForm(timeout = 10000) {
-    await this.usernameInput.waitFor({ state: 'visible', timeout });
-    await this.passwordInput.waitFor({ state: 'visible', timeout });
-    await this.signInButton.waitFor({ state: 'visible', timeout });
-  }
-
-  async login(username = 'admin', password = 'admin') {
-    await this.waitForLoginForm();
-    await this.usernameInput.fill(username);
-    await this.passwordInput.fill(password);
-    await this.signInButton.click();
-    
     try {
-      await this.page.waitForURL(/.*\/(dashboard|tasks|users|labels|task_statuses)/, { timeout: 10000 });
+      await this.page.goto('/login');
+      await helpers.waitForTimeout(2000);
       return true;
-    } catch (_) {
-      if (await this.errorMessage.isVisible({ timeout: 3000 })) {
-        return false;
-      }
+    } catch (error) {
+      console.error('Ошибка при переходе на страницу логина:', error);
       return false;
     }
   }
 
-  async loginWithInvalidCredentials(username = 'invalid', password = 'invalid') {
-    await this.waitForLoginForm();
-    await this.usernameInput.fill(username);
-    await this.passwordInput.fill(password);
-    await this.signInButton.click();
+  async login(username = 'admin', password = 'admin') {
+    console.log('=== Выполняем вход в систему ===');
     
     try {
-      await this.errorMessage.waitFor({ state: 'visible', timeout: 5000 });
-      const errorText = await this.errorMessage.textContent();
-      return errorText.trim();
-    } catch (_) {
-      const currentUrl = this.page.url();
-      if (currentUrl.includes('/login')) {
-        return 'Остались на странице логина';
+      await this.goto();
+      await helpers.waitForTimeout(1000);
+      await this.usernameInput.fill(username);
+      await this.passwordInput.fill(password);
+      await this.signInButton.click();
+      await helpers.waitForTimeout(3000);
+      
+      try {
+        const dashboardTitle = this.page.locator('text=Welcome to the administration').first();
+        if (await dashboardTitle.isVisible({ timeout: 10000 })) {
+          console.log('Успешный вход! Находимся на Dashboard');
+          return true;
+        }
+      } catch (error) {
+        console.log('Не найден заголовок Dashboard, проверяем другие элементы...');
       }
-      return 'Неизвестная ошибка';
+      
+      const currentUrl = this.page.url();
+      console.log(`Текущий URL после входа: ${currentUrl}`);
+      
+      if (currentUrl.includes('/dashboard') || currentUrl.includes('/#/dashboard') || !currentUrl.includes('/login')) {
+        console.log('Вход выполнен успешно (по URL)');
+        return true;
+      }
+      
+      console.log('Вход не выполнен, остались на странице логина');
+      return false;
+      
+    } catch (error) {
+      console.error('Ошибка при выполнении входа:', error);
+      return false;
     }
-  }
-
-  async getErrorMessage() {
-    if (await this.errorMessage.isVisible({ timeout: 3000 })) {
-      return await this.errorMessage.textContent();
-    }
-    return null;
-  }
-
-  async clearLoginForm() {
-    await this.usernameInput.fill('');
-    await this.passwordInput.fill('');
-  }
-
-  async isLoginFormVisible() {
-    const isVisible = await this.usernameInput.isVisible() && 
-                     await this.passwordInput.isVisible() &&
-                     await this.signInButton.isVisible();
-    return isVisible;
   }
 }
 

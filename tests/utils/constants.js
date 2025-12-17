@@ -4,18 +4,18 @@ const mainPageElements = {
   logoutButtonLabel: 'Logout',
   welcomeText: 'Welcome to the administration', 
   usersMenuItemLabel: 'Users',
-  statusMenuItemLabel: 'Task statuses', 
-  labelMenuItemLabel: 'Labels',
+  statusesMenuItemLabel: 'Task statuses',
+  labelsMenuItemLabel: 'Labels',
   tasksMenuItemLabel: 'Tasks',
   dashboardMenuItemLabel: 'Dashboard',
   searchPlaceholder: 'Search...'
-}
+};
 
 const authElements = {
   usernameLabel: 'Username',
   passwordLabel: 'Password', 
   signInButton: 'SIGN IN'
-}
+};
 
 const tableElements = {
   createButton: 'Create', 
@@ -30,7 +30,7 @@ const tableElements = {
   deleteSelected: 'Delete selected',
   confirmButton: 'Confirm',
   cancelButton: 'Cancel'
-}
+};
 
 const formElements = {
   nameField: 'Name',
@@ -44,7 +44,7 @@ const formElements = {
   statusField: 'Status',
   labelField: 'Label',
   descriptionField: 'Description'
-}
+};
 
 const existingData = {
   statuses: ['Draft', 'To Review', 'To Be Fixed', 'To Publish', 'Published'],
@@ -59,7 +59,7 @@ const existingData = {
     'michael@example.com',
     'emily@example.com'
   ]
-}
+};
 
 const testUsers = {
   newUser: {
@@ -77,7 +77,7 @@ const testUsers = {
     firstName: 'Invalid',
     lastName: 'User'
   }
-}
+};
 
 const testStatuses = {
   newStatus: {
@@ -88,7 +88,7 @@ const testStatuses = {
     name: 'Updated Status', 
     slug: 'updated-status'
   }
-}
+};
 
 const testTasks = {
   newTask: {
@@ -105,7 +105,7 @@ const testTasks = {
     status: 'To Review',
     label: 'feature'
   }
-}
+};
 
 const testLabels = {
   newLabel: {
@@ -114,13 +114,13 @@ const testLabels = {
   updatedLabel: {
     name: 'Updated Label'
   }
-}
+};
 
 const kanbanStatuses = {
   todo: 'To Do',
   inProgress: 'In Progress', 
   done: 'Done'
-}
+};
 
 export default {
   mainPageElements,
@@ -133,4 +133,4 @@ export default {
   testTasks,   
   testLabels,  
   kanbanStatuses 
-}
+};
