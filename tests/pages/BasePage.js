@@ -5,7 +5,7 @@ class BasePage {
     this.page = page;
   }
 
-  async waitForElement(selector, timeout = 30000) {
+  async waitForElement(selector, timeout = 15000) {
     try {
       if (typeof selector === 'string') {
         await this.page.waitForSelector(selector, { state: 'visible', timeout });
@@ -18,7 +18,7 @@ class BasePage {
     }
   }
 
-  async click(selector, timeout = 30000) {
+  async click(selector, timeout = 15000) {
     const isVisible = await this.waitForElement(selector, timeout);
     if (!isVisible) {
       throw new Error(`Element not visible for clicking: ${selector}`);
@@ -31,7 +31,7 @@ class BasePage {
     await this.page.waitForLoadState('domcontentloaded').catch(() => null);
   }
 
-  async fill(selector, text, timeout = 30000) {
+  async fill(selector, text, timeout = 15000) {
     const isVisible = await this.waitForElement(selector, timeout);
     if (!isVisible) {
       throw new Error(`Element not visible for filling: ${selector}`);

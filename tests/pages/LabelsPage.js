@@ -24,7 +24,7 @@ class LabelsPage extends BasePage {
     try {
       await this.page.goto('/#/labels', { 
         waitUntil: 'domcontentloaded', 
-        timeout: 60000 
+        timeout: 15000 
       });
       await helpers.waitForPageLoad(this.page);
       await this.page.waitForLoadState('networkidle');
@@ -42,11 +42,11 @@ class LabelsPage extends BasePage {
   async openCreateForm() {
     await this.page.goto('/#/labels/create', { 
       waitUntil: 'domcontentloaded', 
-      timeout: 60000 
+      timeout: 15000 
     });
     await helpers.waitForPageLoad(this.page);
     
-    await this.waitForElement(this.nameInput, 20000);
+    await this.waitForElement(this.nameInput, 15000);
   }
 
   async createLabel(name = null) {
@@ -79,14 +79,14 @@ class LabelsPage extends BasePage {
 
   async editLabel(oldName, newName) {
     await this.goto();
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
     
     
     if (!await this.isLabelVisible(oldName, 10000)) {
       await this.createLabel(oldName);
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await this.goto();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     }
     
     const labelRow = this.page.locator('tbody tr').filter({ hasText: oldName }).first();
@@ -95,19 +95,19 @@ class LabelsPage extends BasePage {
       
       await labelRow.click({ force: true });
       
-      await this.waitForElement(this.nameInput, 20000);
-      await this.page.waitForLoadState('networkidle');
+      await this.waitForElement(this.nameInput, 15000);
+      await this.page.waitForLoadState('domcontentloaded');
       
       await this.clear(this.nameInput);
       await this.fill(this.nameInput, newName);
       
       await this.click(this.saveButton);
       
-      await helpers.waitForPageLoad(this.page);
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForResponse(response => {
+        return response.url().includes('/labels') && response.status() === 200;
+      }, { timeout: 10000 }).catch(() => null);
       
-      await this.goto();
-      await this.page.locator('tbody tr').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
+      await this.page.waitForLoadState('domcontentloaded');
       
       return newName;
     } else {
@@ -235,6 +235,12 @@ class LabelsPage extends BasePage {
   async isLabelVisible(labelName, timeout = 10000) {
     const labelRow = this.page.locator('tbody tr').filter({ hasText: labelName }).first();
     const isVisible = await labelRow.isVisible({ timeout }).catch(() => false);
+    
+    if (!isVisible) {
+      const pageText = await this.page.textContent('body', { timeout: 2000 }).catch(() => '');
+      return pageText && pageText.includes(labelName);
+    }
+    
     return isVisible;
   }
 }

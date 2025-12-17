@@ -35,7 +35,7 @@ class TasksPage extends BasePage {
         try {
           await this.page.goto(url, { 
             waitUntil: 'networkidle',
-            timeout: 30000 
+            timeout: 15000 
           });
           
           const currentUrl = this.page.url();
@@ -66,7 +66,7 @@ class TasksPage extends BasePage {
     try {
       await this.page.goto('/#/tasks/create', { 
         waitUntil: 'networkidle',
-        timeout: 30000 
+        timeout: 15000 
       });
       
       const hasTitleField = await this.titleField.isVisible({ timeout: 5000 }).catch(() => false);
@@ -185,7 +185,7 @@ class TasksPage extends BasePage {
         await this.page.keyboard.press('Enter');
       }
       
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       
       const currentUrl = this.page.url();
       const isOnListPage = currentUrl.includes('/tasks') || currentUrl.includes('/kanban') || !currentUrl.includes('/create');
@@ -199,12 +199,12 @@ class TasksPage extends BasePage {
       if (isSnackbarVisible) {
         await this.snackbar.waitFor({ state: 'visible', timeout: 3000 }).catch(() => null);
         await this.goto();
-        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForLoadState('domcontentloaded');
         return { title: taskTitle, content: taskContent };
       }
       
       await this.goto();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await this.createButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
       
       return { title: taskTitle, content: taskContent };
@@ -217,7 +217,7 @@ class TasksPage extends BasePage {
   async findTask(taskTitle) {
     try {
       await this.goto();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await this.tableRows.first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -286,9 +286,9 @@ class TasksPage extends BasePage {
         }
         
         if (attempt < 2) {
-          await this.page.waitForLoadState('networkidle');
+          await this.page.waitForLoadState('domcontentloaded');
           await this.goto();
-          await this.page.waitForLoadState('networkidle');
+          await this.page.waitForLoadState('domcontentloaded');
           await this.tableRows.first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
         }
       }
@@ -312,7 +312,7 @@ class TasksPage extends BasePage {
       }
       
       await taskElement.click({ force: true });
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await this.editButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
       
       const isEditVisible = await this.editButton.isVisible({ timeout: 5000 }).catch(() => false);
@@ -328,7 +328,7 @@ class TasksPage extends BasePage {
         await this.editButton.click();
       }
       
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await this.titleField.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
       
       if (newTitle) {
@@ -353,7 +353,7 @@ class TasksPage extends BasePage {
       }
       
       await this.saveButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       
       return { title: newTitle || oldTitle, content: newContent };
     } catch (_error) {
@@ -370,7 +370,7 @@ class TasksPage extends BasePage {
       }
       
       await taskElement.click({ force: true });
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await this.deleteButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
       
       const isDeleteVisible = await this.deleteButton.isVisible({ timeout: 5000 }).catch(() => false);
@@ -393,9 +393,9 @@ class TasksPage extends BasePage {
         await this.confirmDeleteButton.click();
       }
       
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await this.goto();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       
       return true;
     } catch (_error) {
@@ -408,23 +408,110 @@ class TasksPage extends BasePage {
     return false;
   }
 
-  async moveTaskBetweenColumns(_taskTitle, _fromColumn, _toColumn) {
-    return false;
+  async moveTaskBetweenColumns(taskTitle, fromColumn, toColumn) {
+    try {
+      await this.goto();
+      await this.page.waitForLoadState('domcontentloaded');
+      
+      const moved = await helpers.moveTaskBetweenColumns(this.page, taskTitle, fromColumn, toColumn);
+      if (moved) {
+        await this.page.waitForLoadState('domcontentloaded');
+        await this.goto();
+        await this.page.waitForLoadState('domcontentloaded');
+        
+        const targetColumn = this.page.locator(`:has-text("${toColumn}")`).first();
+        const taskInTargetColumn = targetColumn.locator(`:has-text("${taskTitle}")`).first();
+        const isInTargetColumn = await taskInTargetColumn.isVisible({ timeout: 5000 }).catch(() => false);
+        return isInTargetColumn;
+      }
+      
+      return false;
+    } catch (_error) {
+      return false;
+    }
   }
 
-  async changeTaskStatus(_taskTitle, _newStatus) {
-    return null;
+  async changeTaskStatus(taskTitle, newStatus) {
+    try {
+      const taskElement = await this.findTask(taskTitle);
+      if (!taskElement) {
+        return null;
+      }
+      
+      await taskElement.click({ force: true });
+      await this.page.waitForLoadState('domcontentloaded');
+      await this.editButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
+      
+      const isEditVisible = await this.editButton.isVisible({ timeout: 5000 }).catch(() => false);
+      if (!isEditVisible) {
+        const editLink = this.page.locator('a:has-text("Edit")').first();
+        const isEditLinkVisible = await editLink.isVisible({ timeout: 2000 }).catch(() => false);
+        if (isEditLinkVisible) {
+          await editLink.click();
+        } else {
+          return null;
+        }
+      } else {
+        await this.editButton.click();
+      }
+      
+      await this.page.waitForLoadState('domcontentloaded');
+      await this.statusField.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
+      
+      const isStatusVisible = await this.statusField.isVisible({ timeout: 3000 }).catch(() => false);
+      if (isStatusVisible) {
+        const isSelect = await this.statusField.evaluate(el => el.tagName === 'SELECT');
+        if (isSelect) {
+          await this.statusField.selectOption({ label: newStatus });
+        } else {
+          await this.statusField.fill(newStatus);
+        }
+      }
+      
+      const isSaveVisible = await this.saveButton.isVisible({ timeout: 2000 }).catch(() => false);
+      if (!isSaveVisible) {
+        return null;
+      }
+      
+      await this.saveButton.click();
+      await this.page.waitForLoadState('domcontentloaded');
+      
+      await this.goto();
+      await this.page.waitForLoadState('domcontentloaded');
+      
+      const taskElementAfterEdit = await this.findTask(taskTitle);
+      if (taskElementAfterEdit) {
+        const taskText = await taskElementAfterEdit.textContent({ timeout: 2000 }).catch(() => '');
+        const pageText = await this.page.textContent('body', { timeout: 2000 }).catch(() => '');
+        const hasNewStatus = (taskText && taskText.includes(newStatus)) || (pageText && pageText.includes(newStatus));
+        
+        if (hasNewStatus) {
+          return { title: taskTitle, status: newStatus };
+        }
+        
+        const statusInColumn = this.page.locator(`:has-text("${newStatus}")`).first();
+        const taskNearStatus = statusInColumn.locator(`:has-text("${taskTitle}")`).first();
+        const isTaskNearStatus = await taskNearStatus.isVisible({ timeout: 3000 }).catch(() => false);
+        
+        return isTaskNearStatus ? { title: taskTitle, status: newStatus } : null;
+      }
+      
+      return null;
+    } catch (_error) {
+      await this.goto();
+      return null;
+    }
   }
 
   async isCreateButtonAvailable() {
     await this.goto();
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
     return await this.createButton.isVisible({ timeout: 5000 }).catch(() => false);
   }
 
   async getTaskCount() {
     await this.goto();
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
     await this.tableRows.first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
     
     const tableCount = await this.tableRows.count();
@@ -434,7 +521,7 @@ class TasksPage extends BasePage {
 
   async getColumnCount() {
     await this.goto();
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
     await this.page.locator('table, .column, [class*="column"]').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
     
     const columnCount = await this.kanbanColumns.count();

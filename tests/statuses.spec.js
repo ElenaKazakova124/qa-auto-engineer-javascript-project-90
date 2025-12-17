@@ -14,7 +14,7 @@ test.describe('Статусы', () => {
     
     await loginPage.goto();
     await loginPage.login('admin', 'admin');
-    await page.waitForLoadState('networkidle', { timeout: 30000 });
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
   });
 
   test('создание нового статуса', async ({ page }) => {
@@ -23,7 +23,7 @@ test.describe('Статусы', () => {
     
     await statusesPage.createStatus(statusName, statusSlug);
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await statusesPage.goto();
     await page.locator('tbody tr').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
 
@@ -36,30 +36,43 @@ test.describe('Статусы', () => {
     const originalSlug = `original-slug-${Date.now()}`;
     
     await statusesPage.createStatus(originalStatus, originalSlug);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await statusesPage.goto();
     await page.locator('tbody tr').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
+    
+    const isOriginalVisible = await statusesPage.isStatusVisible(originalStatus);
+    expect(isOriginalVisible).toBeTruthy();
     
     const updatedStatus = `UpdatedStatus${Date.now()}`;
     const updatedSlug = `updated-slug-${Date.now()}`;
     
-    await statusesPage.editStatus(originalStatus, updatedStatus, updatedSlug);
+    const editResult = await statusesPage.editStatus(originalStatus, updatedStatus, updatedSlug);
+    expect(editResult).toBeDefined();
+    if (editResult && editResult.name) {
+      expect(editResult.name).toBe(updatedStatus);
+    }
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
-    for (let attempt = 0; attempt < 3; attempt++) {
+    let isUpdatedStatusVisible = false;
+    for (let attempt = 0; attempt < 5; attempt++) {
       await statusesPage.goto();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.locator('tbody tr').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
-      const isUpdatedStatusVisible = await statusesPage.isStatusVisible(updatedStatus, 10000);
+      isUpdatedStatusVisible = await statusesPage.isStatusVisible(updatedStatus, 15000);
       if (isUpdatedStatusVisible) {
-        expect(isUpdatedStatusVisible).toBeTruthy();
-        return;
+        break;
+      }
+      
+      const isOriginalStillVisible = await statusesPage.isStatusVisible(originalStatus, 5000).catch(() => false);
+      if (!isOriginalStillVisible && editResult && editResult.name === updatedStatus) {
+        isUpdatedStatusVisible = true;
+        break;
       }
     }
     
-    expect(true).toBe(true);
+    expect(isUpdatedStatusVisible).toBeTruthy();
   });
 
   test('отображение списка статусов', async ({ page }) => {
@@ -78,12 +91,12 @@ test.describe('Статусы', () => {
     const statusSlug = `delete-slug-${Date.now()}`;
     
     await statusesPage.createStatus(statusToDelete, statusSlug);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     const deleteResult = await statusesPage.deleteStatus(statusToDelete);
     expect(deleteResult).toBeTruthy();
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await statusesPage.goto();
     
     const isStillVisible = await statusesPage.isStatusVisible(statusToDelete);

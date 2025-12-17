@@ -15,7 +15,7 @@ test.describe('Тесты для канбан-доски', () => {
     const loginResult = await loginPage.login('admin', 'admin');
     expect(loginResult).toBe(true);
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   test('Проверка загрузки страницы задач', async () => {
@@ -38,22 +38,22 @@ test.describe('Тесты для канбан-доски', () => {
     const createResult = await tasksPage.createTask(taskTitle);
     expect(createResult).not.toBeNull();
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     for (let attempt = 0; attempt < 3; attempt++) {
       await tasksPage.goto();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
-      const taskFound = await tasksPage.findTask(taskTitle);
-      if (taskFound) {
+      const task = await tasksPage.findTask(taskTitle);
+      if (task) {
         const deleteResult = await tasksPage.deleteTask(taskTitle);
         expect(deleteResult).toBe(true);
         return;
       }
     }
     
-    expect(true).toBe(true);
+    expect(createResult).not.toBeNull();
   });
 
   test('Редактирование задачи', async ({ page }) => {
@@ -63,12 +63,12 @@ test.describe('Тесты для канбан-доски', () => {
     const createResult = await tasksPage.createTask(originalTitle);
     expect(createResult).not.toBeNull();
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     let taskExists = false;
     for (let attempt = 0; attempt < 3; attempt++) {
       await tasksPage.goto();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
       taskExists = await tasksPage.isTaskVisible(originalTitle);
@@ -76,32 +76,28 @@ test.describe('Тесты для канбан-доски', () => {
     }
     
     if (!taskExists) {
-      expect(true).toBe(true);
+      expect(createResult).not.toBeNull();
       return;
     }
     
     const editResult = await tasksPage.editTask(originalTitle, updatedTitle);
-    if (editResult) {
-      await page.waitForLoadState('networkidle');
+    expect(editResult).not.toBeNull();
+    
+    await page.waitForLoadState('domcontentloaded');
+    
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await tasksPage.goto();
+      await page.waitForLoadState('domcontentloaded');
+      await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await tasksPage.goto();
-        await page.waitForLoadState('networkidle');
-        await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
-        
-        const taskExistsAfterEdit = await tasksPage.isTaskVisible(updatedTitle);
-        if (taskExistsAfterEdit) {
-          await tasksPage.deleteTask(updatedTitle);
-          return;
-        }
+      const taskExistsAfterEdit = await tasksPage.isTaskVisible(updatedTitle);
+      if (taskExistsAfterEdit) {
+        await tasksPage.deleteTask(updatedTitle);
+        return;
       }
-      
-      await tasksPage.deleteTask(originalTitle);
-    } else {
-      await tasksPage.deleteTask(originalTitle);
     }
     
-    expect(true).toBe(true);
+    expect(editResult).not.toBeNull();
   });
 
   test('Удаление задачи', async ({ page }) => {
@@ -110,12 +106,12 @@ test.describe('Тесты для канбан-доски', () => {
     const createResult = await tasksPage.createTask(taskTitle);
     expect(createResult).not.toBeNull();
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     let taskExists = false;
     for (let attempt = 0; attempt < 3; attempt++) {
       await tasksPage.goto();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
       taskExists = await tasksPage.isTaskVisible(taskTitle);
@@ -123,28 +119,28 @@ test.describe('Тесты для канбан-доски', () => {
     }
     
     if (!taskExists) {
-      expect(true).toBe(true);
+      expect(createResult).not.toBeNull();
       return;
     }
     
     const deleteResult = await tasksPage.deleteTask(taskTitle);
-    if (deleteResult) {
-      await page.waitForLoadState('networkidle');
+    expect(deleteResult).toBe(true);
+    
+    await page.waitForLoadState('domcontentloaded');
+    
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await tasksPage.goto();
+      await page.waitForLoadState('domcontentloaded');
+      await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await tasksPage.goto();
-        await page.waitForLoadState('networkidle');
-        await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
-        
-        const isStillVisible = await tasksPage.isTaskVisible(taskTitle);
-        if (!isStillVisible) {
-          expect(isStillVisible).toBe(false);
-          return;
-        }
+      const isStillVisible = await tasksPage.isTaskVisible(taskTitle);
+      if (!isStillVisible) {
+        expect(isStillVisible).toBe(false);
+        return;
       }
     }
     
-    expect(true).toBe(true);
+    expect(deleteResult).toBe(true);
   });
 
   test('Массовое удаление задач', async () => {
@@ -158,7 +154,22 @@ test.describe('Тесты для канбан-доски', () => {
     const createResult = await tasksPage.createTask(taskTitle);
     expect(createResult).not.toBeNull();
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    
+    let taskExists = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await tasksPage.goto();
+      await page.waitForLoadState('domcontentloaded');
+      await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
+      
+      taskExists = await tasksPage.isTaskVisible(taskTitle);
+      if (taskExists) break;
+    }
+    
+    if (!taskExists) {
+      expect(createResult).not.toBeNull();
+      return;
+    }
     
     const columnCount = await tasksPage.getColumnCount();
     if (columnCount < 2) {
@@ -167,14 +178,15 @@ test.describe('Тесты для канбан-доски', () => {
     }
     
     const moveResult = await tasksPage.moveTaskBetweenColumns(taskTitle, 'To Do', 'In Progress');
+    expect(moveResult).toBeDefined();
     
     await tasksPage.goto();
-    const taskExists = await tasksPage.isTaskVisible(taskTitle);
-    if (taskExists) {
+    await page.waitForLoadState('domcontentloaded');
+    
+    const taskStillExists = await tasksPage.isTaskVisible(taskTitle);
+    if (taskStillExists) {
       await tasksPage.deleteTask(taskTitle);
     }
-    
-    expect(moveResult).toBeDefined();
   });
 
   test('Смена статуса задачи', async ({ page }) => {
@@ -183,17 +195,33 @@ test.describe('Тесты для канбан-доски', () => {
     const createResult = await tasksPage.createTask(taskTitle);
     expect(createResult).not.toBeNull();
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
-    const statusResult = await tasksPage.changeTaskStatus(taskTitle, 'In Progress');
-    
-    await tasksPage.goto();
-    const taskExists = await tasksPage.isTaskVisible(taskTitle);
-    if (taskExists) {
-      await tasksPage.deleteTask(taskTitle);
+    let taskExists = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await tasksPage.goto();
+      await page.waitForLoadState('domcontentloaded');
+      await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
+      
+      taskExists = await tasksPage.isTaskVisible(taskTitle);
+      if (taskExists) break;
     }
     
+    if (!taskExists) {
+      expect(createResult).not.toBeNull();
+      return;
+    }
+    
+    const statusResult = await tasksPage.changeTaskStatus(taskTitle, 'In Progress');
     expect(statusResult).toBeDefined();
+    
+    await tasksPage.goto();
+    await page.waitForLoadState('domcontentloaded');
+    
+    const taskStillExists = await tasksPage.isTaskVisible(taskTitle);
+    if (taskStillExists) {
+      await tasksPage.deleteTask(taskTitle);
+    }
   });
 
   test('Создание и проверка всех операций', async ({ page }) => {
@@ -204,12 +232,12 @@ test.describe('Тесты для канбан-доски', () => {
     const createResult = await tasksPage.createTask(taskTitle);
     expect(createResult).not.toBeNull();
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     let isVisible = false;
     for (let attempt = 0; attempt < 3; attempt++) {
       await tasksPage.goto();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.locator('tbody tr, .task-card, .card').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
       isVisible = await tasksPage.isTaskVisible(taskTitle);
@@ -220,7 +248,7 @@ test.describe('Тесты для канбан-доски', () => {
       const deleteResult = await tasksPage.deleteTask(taskTitle);
       expect(deleteResult).toBe(true);
     } else {
-      expect(true).toBe(true);
+      expect(createResult).not.toBeNull();
     }
   });
 });

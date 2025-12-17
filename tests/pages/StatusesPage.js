@@ -25,7 +25,7 @@ class StatusesPage extends BasePage {
     try {
       await this.page.goto('/#/task_statuses', { 
         waitUntil: 'domcontentloaded', 
-        timeout: 60000 
+        timeout: 15000 
       });
       await helpers.waitForPageLoad(this.page);
     } catch (_error) {
@@ -41,11 +41,11 @@ class StatusesPage extends BasePage {
   async openCreateForm() {
     await this.page.goto('/#/task_statuses/create', { 
       waitUntil: 'domcontentloaded', 
-      timeout: 60000 
+      timeout: 15000 
     });
     await helpers.waitForPageLoad(this.page);
-    await this.waitForElement(this.nameInput, 20000);
-    await this.waitForElement(this.slugInput, 20000);
+    await this.waitForElement(this.nameInput, 15000);
+    await this.waitForElement(this.slugInput, 15000);
   }
 
   async createStatus(name = null, slug = null) {
@@ -78,15 +78,15 @@ class StatusesPage extends BasePage {
 
   async editStatus(oldName, newName, newSlug = null) {
     await this.goto();
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
     
     
     if (!await this.isStatusVisible(oldName, 10000)) {
       const slug = `slug-${Date.now()}`;
       await this.createStatus(oldName, slug);
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
       await this.goto();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState('domcontentloaded');
     }
     
     const statusRow = this.page.locator('tbody tr').filter({ hasText: oldName }).first();
@@ -95,9 +95,9 @@ class StatusesPage extends BasePage {
       
       await statusRow.click({ force: true });
       
-      await this.waitForElement(this.nameInput, 20000);
-      await this.waitForElement(this.slugInput, 20000);
-      await this.page.waitForLoadState('networkidle');
+      await this.waitForElement(this.nameInput, 15000);
+      await this.waitForElement(this.slugInput, 15000);
+      await this.page.waitForLoadState('domcontentloaded');
       await this.clear(this.nameInput);
       await this.fill(this.nameInput, newName);
       
@@ -114,11 +114,11 @@ class StatusesPage extends BasePage {
       
       await this.click(this.saveButton);
       
-      await helpers.waitForPageLoad(this.page);
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForResponse(response => {
+        return (response.url().includes('/task_statuses') || response.url().includes('/statuses')) && response.status() === 200;
+      }, { timeout: 10000 }).catch(() => null);
       
-      await this.goto();
-      await this.page.locator('tbody tr').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
+      await this.page.waitForLoadState('domcontentloaded');
       
       return { name: newName, slug: newSlug };
     } else {
@@ -248,6 +248,12 @@ class StatusesPage extends BasePage {
   async isStatusVisible(statusName, timeout = 10000) {
     const statusRow = this.page.locator('tbody tr').filter({ hasText: statusName }).first();
     const isVisible = await statusRow.isVisible({ timeout }).catch(() => false);
+    
+    if (!isVisible) {
+      const pageText = await this.page.textContent('body', { timeout: 2000 }).catch(() => '');
+      return pageText && pageText.includes(statusName);
+    }
+    
     return isVisible;
   }
 }

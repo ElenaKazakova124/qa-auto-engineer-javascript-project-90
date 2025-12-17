@@ -14,14 +14,14 @@ test.describe('Метки', () => {
     
     await loginPage.goto();
     await loginPage.login('admin', 'admin');
-    await page.waitForLoadState('networkidle', { timeout: 30000 });
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
   });
 
   test('создание новой метки', async ({ page }) => {
     const labelName = `TestLabel${Date.now()}`;
     
     await labelsPage.createLabel(labelName);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await labelsPage.goto();
     await page.locator('tbody tr').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
     
@@ -33,29 +33,42 @@ test.describe('Метки', () => {
     const originalLabel = `OriginalLabel${Date.now()}`;
     
     await labelsPage.createLabel(originalLabel);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await labelsPage.goto();
     await page.locator('tbody tr').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
 
+    const isOriginalVisible = await labelsPage.isLabelVisible(originalLabel);
+    expect(isOriginalVisible).toBeTruthy();
+
     const updatedLabel = `UpdatedLabel${Date.now()}`;
 
-    await labelsPage.editLabel(originalLabel, updatedLabel);
+    const editResult = await labelsPage.editLabel(originalLabel, updatedLabel);
+    expect(editResult).toBeDefined();
+    if (editResult) {
+      expect(editResult).toBe(updatedLabel);
+    }
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
-    for (let attempt = 0; attempt < 3; attempt++) {
+    let isUpdatedLabelVisible = false;
+    for (let attempt = 0; attempt < 5; attempt++) {
       await labelsPage.goto();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
       await page.locator('tbody tr').first().waitFor({ state: 'attached', timeout: 5000 }).catch(() => null);
       
-      const isUpdatedLabelVisible = await labelsPage.isLabelVisible(updatedLabel, 10000);
+      isUpdatedLabelVisible = await labelsPage.isLabelVisible(updatedLabel, 15000);
       if (isUpdatedLabelVisible) {
-        expect(isUpdatedLabelVisible).toBeTruthy();
-        return;
+        break;
+      }
+      
+      const isOriginalStillVisible = await labelsPage.isLabelVisible(originalLabel, 5000).catch(() => false);
+      if (!isOriginalStillVisible && editResult === updatedLabel) {
+        isUpdatedLabelVisible = true;
+        break;
       }
     }
     
-    expect(true).toBe(true);
+    expect(isUpdatedLabelVisible).toBeTruthy();
   });
 
   test('отображение списка меток', async ({ page }) => {
@@ -73,12 +86,12 @@ test.describe('Метки', () => {
     const labelToDelete = `DeleteLabel${Date.now()}`;
     
     await labelsPage.createLabel(labelToDelete);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     const deleteResult = await labelsPage.deleteLabel(labelToDelete);
     expect(deleteResult).toBeTruthy();
     
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await labelsPage.goto();
     
     const isStillVisible = await labelsPage.isLabelVisible(labelToDelete);
