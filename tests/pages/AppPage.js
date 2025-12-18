@@ -27,22 +27,48 @@ class AppPage extends BasePage {
     return this.page.getByLabel(constants.authElements.usernameLabel);
   }
 
+  get usernameText() {
+    return this.page.getByText(new RegExp(constants.authElements.usernameLabel, 'i')).first();
+  }
+
+  get passwordText() {
+    return this.page.getByText(new RegExp(constants.authElements.passwordLabel, 'i')).first();
+  }
+
+  get loginRequiredAlert() {
+    return this.page.locator('[role="alert"]').filter({ hasText: /please login/i }).first();
+  }
+
   async waitForAppLoad(timeout = 15000) {
-    // IMPORTANT: Use Promise.any (not Promise.race). race rejects as soon as the first awaited
-    // promise rejects (e.g. a timeout), which can fail the wait even if other anchors could appear.
-    await Promise.any([
-      this.signInButton.waitFor({ state: 'visible', timeout }),
-      this.usernameField.waitFor({ state: 'visible', timeout }),
-      this.welcomeText.waitFor({ state: 'visible', timeout }),
-      this.dashboardLink.waitFor({ state: 'visible', timeout }),
-      this.profileButton.waitFor({ state: 'visible', timeout }),
-    ]);
+    try {
+      await Promise.any([
+        // Login page anchors (can vary by implementation)
+        this.signInButton.waitFor({ state: 'visible', timeout }),
+        this.usernameField.waitFor({ state: 'visible', timeout }),
+        this.usernameText.waitFor({ state: 'visible', timeout }),
+        this.passwordText.waitFor({ state: 'visible', timeout }),
+        this.loginRequiredAlert.waitFor({ state: 'visible', timeout }),
+
+        this.welcomeText.waitFor({ state: 'visible', timeout }),
+        this.dashboardLink.waitFor({ state: 'visible', timeout }),
+        this.profileButton.waitFor({ state: 'visible', timeout }),
+      ]);
+    } catch (_error) {
+      const url = this.page.url();
+      const title = await this.page.title().catch(() => '');
+      const bodyText = await this.page.textContent('body').catch(() => '');
+      const snippet = (bodyText || '').replace(/\s+/g, ' ').slice(0, 200);
+      throw new Error(`App did not reach a known stable UI state in ${timeout}ms. url="${url}" title="${title}" bodySnippet="${snippet}"`);
+    }
   }
 
   async isAppLoaded() {
     return (
       await this.signInButton.isVisible().catch(() => false) ||
       await this.usernameField.isVisible().catch(() => false) ||
+      await this.usernameText.isVisible().catch(() => false) ||
+      await this.passwordText.isVisible().catch(() => false) ||
+      await this.loginRequiredAlert.isVisible().catch(() => false) ||
       await this.welcomeText.isVisible().catch(() => false) ||
       await this.dashboardLink.isVisible().catch(() => false) ||
       await this.profileButton.isVisible().catch(() => false)

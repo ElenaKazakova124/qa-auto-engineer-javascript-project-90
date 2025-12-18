@@ -46,7 +46,9 @@ class LoginPage extends BasePage {
       const filledPassword = await passwordField.fill(password).then(() => true).catch(() => false);
       if (!filledPassword) await this.passwordInput.fill(password);
 
-      await this.signInButton.click();
+      // Submit (click + fallback Enter) — some implementations may require explicit form submit.
+      await this.signInButton.click().catch(() => null);
+      await this.passwordInput.press('Enter').catch(() => null);
 
       const dashboardLink = this.page.locator(`a:has-text("${constants.mainPageElements.dashboardMenuItemLabel}")`).first();
 
@@ -69,8 +71,16 @@ class LoginPage extends BasePage {
       const pleaseLoginAlert = this.page.locator('[role="alert"]').filter({ hasText: /please login/i }).first();
       const hasPleaseLogin = await pleaseLoginAlert.isVisible({ timeout: 500 }).catch(() => false);
 
-      // Success if we clearly see app shell OR we left /login and did not get bounced with a "please login" alert.
-      return isWelcomeVisible || isDashboardVisible || (isNotOnLogin && !hasPleaseLogin);
+      const ok = isWelcomeVisible || isDashboardVisible || (isNotOnLogin && !hasPleaseLogin);
+      if (!ok) {
+        // Extra diagnostics for CI logs
+        const errorText = await this.errorMessage.textContent().catch(() => '');
+        const bodyText = await this.page.textContent('body').catch(() => '');
+        const snippet = (bodyText || '').replace(/\s+/g, ' ').slice(0, 200);
+        // eslint-disable-next-line no-console
+        console.log(`[login] failed url="${currentUrl}" error="${(errorText || '').trim()}" bodySnippet="${snippet}"`);
+      }
+      return ok;
     } catch (_error) {
       return false;
     }
