@@ -14,17 +14,35 @@ class AppPage extends BasePage {
     return this.page.getByText(constants.mainPageElements.welcomeText);
   }
 
+  get dashboardLink() {
+    return this.page.locator(`a:has-text("${constants.mainPageElements.dashboardMenuItemLabel}")`).first();
+  }
+
+  get profileButton() {
+    return this.page.getByRole('button', { name: /jane doe|profile/i }).first();
+  }
+
+  get usernameField() {
+    return this.page.getByLabel(constants.authElements.usernameLabel);
+  }
+
   async waitForAppLoad(timeout = 15000) {
     await Promise.race([
       this.signInButton.waitFor({ state: 'visible', timeout }),
-      this.welcomeText.waitFor({ state: 'visible', timeout })
+      this.usernameField.waitFor({ state: 'visible', timeout }),
+      this.welcomeText.waitFor({ state: 'visible', timeout }),
+      this.dashboardLink.waitFor({ state: 'visible', timeout }),
+      this.profileButton.waitFor({ state: 'visible', timeout }),
     ]);
   }
 
   async isAppLoaded() {
     return (
       await this.signInButton.isVisible().catch(() => false) ||
-      await this.welcomeText.isVisible().catch(() => false)
+      await this.usernameField.isVisible().catch(() => false) ||
+      await this.welcomeText.isVisible().catch(() => false) ||
+      await this.dashboardLink.isVisible().catch(() => false) ||
+      await this.profileButton.isVisible().catch(() => false)
     );
   }
 }
