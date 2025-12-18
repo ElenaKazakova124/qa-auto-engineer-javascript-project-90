@@ -25,7 +25,7 @@ class Helpers {
       
       const usernameField = page.getByLabel(constants.authElements.usernameLabel);
       const passwordField = page.getByLabel(constants.authElements.passwordLabel);
-      const signInButton = page.getByRole('button', { name: constants.authElements.signInButton });
+      const signInButton = page.getByRole('button', { name: /sign in/i });
 
       await usernameField.fill(username);
       await passwordField.fill(password);
@@ -49,7 +49,7 @@ class Helpers {
       
       await page.waitForLoadState('networkidle');
       
-      const signInButton = page.getByRole('button', { name: constants.authElements.signInButton });
+      const signInButton = page.getByRole('button', { name: /sign in/i });
       await expect(signInButton).toBeVisible({ timeout: 10000 });
       
       return true;

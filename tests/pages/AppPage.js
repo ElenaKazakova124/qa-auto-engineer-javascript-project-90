@@ -7,7 +7,7 @@ class AppPage extends BasePage {
   }
 
   get signInButton() {
-    return this.page.getByRole('button', { name: constants.authElements.signInButton });
+    return this.page.getByRole('button', { name: /sign in/i });
   }
 
   get welcomeText() {
