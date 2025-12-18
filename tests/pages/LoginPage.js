@@ -4,8 +4,10 @@ import constants from '../utils/constants.js';
 class LoginPage extends BasePage {
   constructor(page) {
     super(page);
+    // Keep broad fallbacks, but prefer label-based selectors during login.
     this.usernameInput = page.locator('input[name="username"], input[placeholder*="Username"], input[type="text"]').first();
     this.passwordInput = page.locator('input[name="password"], input[placeholder*="Password"], input[type="password"]').first();
+    // The app uses "Sign in" (case may vary between environments)
     this.signInButton = page.getByRole('button', { name: /sign in/i });
     this.errorMessage = page.locator('.error, .Mui-error, [role="alert"]').first();
   }
@@ -36,8 +38,9 @@ class LoginPage extends BasePage {
       await this.goto();
       await this.page.waitForLoadState('domcontentloaded');
 
-      const usernameField = this.page.getByLabel(constants.authElements.usernameLabel).first();
-      const passwordField = this.page.getByLabel(constants.authElements.passwordLabel).first();
+      // Labels can differ in casing between implementations/environments
+      const usernameField = this.page.getByLabel(/username/i).first();
+      const passwordField = this.page.getByLabel(/password/i).first();
 
       // Fill with robust fallbacks (label-based first, then generic selectors)
       const filledUsername = await usernameField.fill(username).then(() => true).catch(() => false);
@@ -46,9 +49,7 @@ class LoginPage extends BasePage {
       const filledPassword = await passwordField.fill(password).then(() => true).catch(() => false);
       if (!filledPassword) await this.passwordInput.fill(password);
 
-      // Submit (click + fallback Enter) — some implementations may require explicit form submit.
-      await this.signInButton.click().catch(() => null);
-      await this.passwordInput.press('Enter').catch(() => null);
+      await this.signInButton.click();
 
       const dashboardLink = this.page.locator(`a:has-text("${constants.mainPageElements.dashboardMenuItemLabel}")`).first();
 
@@ -71,16 +72,8 @@ class LoginPage extends BasePage {
       const pleaseLoginAlert = this.page.locator('[role="alert"]').filter({ hasText: /please login/i }).first();
       const hasPleaseLogin = await pleaseLoginAlert.isVisible({ timeout: 500 }).catch(() => false);
 
-      const ok = isWelcomeVisible || isDashboardVisible || (isNotOnLogin && !hasPleaseLogin);
-      if (!ok) {
-        // Extra diagnostics for CI logs
-        const errorText = await this.errorMessage.textContent().catch(() => '');
-        const bodyText = await this.page.textContent('body').catch(() => '');
-        const snippet = (bodyText || '').replace(/\s+/g, ' ').slice(0, 200);
-        // eslint-disable-next-line no-console
-        console.log(`[login] failed url="${currentUrl}" error="${(errorText || '').trim()}" bodySnippet="${snippet}"`);
-      }
-      return ok;
+      // Success if we clearly see app shell OR we left /login and did not get bounced with a "please login" alert.
+      return isWelcomeVisible || isDashboardVisible || (isNotOnLogin && !hasPleaseLogin);
     } catch (_error) {
       return false;
     }
