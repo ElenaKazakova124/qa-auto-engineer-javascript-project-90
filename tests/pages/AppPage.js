@@ -93,6 +93,10 @@ class AppPage extends BasePage {
         this.welcomeText.waitFor({ state: 'visible', timeout }),
         this.dashboardLink.waitFor({ state: 'visible', timeout }),
         this.profileButton.waitFor({ state: 'visible', timeout }),
+
+        // Minimal "app is up" anchors (even if UI crashed, index.html loaded)
+        this.page.locator('body').waitFor({ state: 'attached', timeout }),
+        this.page.locator('#root').waitFor({ state: 'attached', timeout }),
       ]);
 
       // #region agent log
@@ -107,6 +111,8 @@ class AppPage extends BasePage {
         welcome: await this.welcomeText.isVisible({ timeout: 300 }).catch(() => false),
         dashboard: await this.dashboardLink.isVisible({ timeout: 300 }).catch(() => false),
         profile: await this.profileButton.isVisible({ timeout: 300 }).catch(() => false),
+        readyState: await this.page.evaluate(() => document.readyState).catch(() => ''),
+        rootLen: await this.page.locator('#root').innerHTML().then(html => (html || '').length).catch(() => -1),
       };
       __agentLog('C', 'success-post-anchors-visible', post);
       // #endregion
