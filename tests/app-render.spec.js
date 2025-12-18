@@ -4,6 +4,30 @@ import LoginPage from './pages/LoginPage.js';
 import constants from './utils/constants.js';
 
 test('приложение загружается', async ({ page }) => {
+  // #region agent log
+  page.on('pageerror', (err) => {
+    // eslint-disable-next-line no-console
+    console.log(`[pw-pageerror] ${err?.message || err}`);
+  });
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') {
+      // eslint-disable-next-line no-console
+      console.log(`[pw-console-error] ${msg.text()}`);
+    }
+  });
+  page.on('requestfailed', (req) => {
+    // eslint-disable-next-line no-console
+    console.log(`[pw-requestfailed] ${req.method()} ${req.url()} :: ${req.failure()?.errorText || 'unknown'}`);
+  });
+  page.on('response', (res) => {
+    const status = res.status();
+    if (status >= 400 && (res.request().resourceType() === 'document' || res.request().resourceType() === 'script')) {
+      // eslint-disable-next-line no-console
+      console.log(`[pw-response] ${status} ${res.request().resourceType()} ${res.url()}`);
+    }
+  });
+  // #endregion
+
   const app = new AppPage(page);
   await page.goto('/');
 

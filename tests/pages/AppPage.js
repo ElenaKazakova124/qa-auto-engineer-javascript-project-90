@@ -126,6 +126,8 @@ class AppPage extends BasePage {
         const snapshot = {
           url: this.page.url(),
           title: await this.page.title().catch(() => ''),
+          readyState: await this.page.evaluate(() => document.readyState).catch(() => ''),
+          rootLen: await this.page.locator('#root').innerHTML().then(html => (html || '').length).catch(() => -1),
           signIn: await this.signInButton.isVisible({ timeout: 300 }).catch(() => false),
           usernameField: await this.usernameField.isVisible({ timeout: 300 }).catch(() => false),
           usernameText: await this.usernameText.isVisible({ timeout: 300 }).catch(() => false),
