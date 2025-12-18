@@ -25,7 +25,7 @@ test.describe('Авторизация и выход', () => {
       sessionStorage.clear();
     });
     
-    await page.goto('http://localhost:5173/');
+    await page.goto('/');
     
     await expect(loginPage.signInButton).toBeVisible({ timeout: 10000 });
   });

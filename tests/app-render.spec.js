@@ -5,7 +5,7 @@ import constants from './utils/constants.js';
 
 test('приложение загружается', async ({ page }) => {
   const app = new AppPage(page);
-  await page.goto('http://localhost:5173/');
+  await page.goto('/');
 
   await app.waitForAppLoad();
 
@@ -14,7 +14,7 @@ test('приложение загружается', async ({ page }) => {
 
 test('отображается кнопка входа на странице логина', async ({ page }) => {
   const app = new AppPage(page);
-  await page.goto('http://localhost:5173/');
+  await page.goto('/');
 
   await app.waitForAppLoad();
 
@@ -58,10 +58,11 @@ test('отображаются основные элементы меню нав
 
 test('корректный URL после загрузки приложения', async ({ page }) => {
   const app = new AppPage(page);
-  await page.goto('http://localhost:5173/');
+  await page.goto('/');
 
   await app.waitForAppLoad();
 
   const url = page.url();
-  expect(url).toMatch(/http:\/\/localhost:5173/);
+  // App may redirect to the login route depending on auth state
+  expect(url).toMatch(/\/(#\/login)?$/);
 });
