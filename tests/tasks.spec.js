@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import LoginPage from './pages/LoginPage.js';
 import TasksPage from './pages/TasksPage.js';
 
-test.describe.skip('Тесты для канбан-доски', () => {
+test.describe('Тесты для канбан-доски', () => {
   let loginPage;
   let tasksPage;
 

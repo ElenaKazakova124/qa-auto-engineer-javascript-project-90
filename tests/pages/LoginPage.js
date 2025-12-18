@@ -4,10 +4,8 @@ import constants from '../utils/constants.js';
 class LoginPage extends BasePage {
   constructor(page) {
     super(page);
-    // Keep broad fallbacks, but prefer label-based selectors during login.
     this.usernameInput = page.locator('input[name="username"], input[placeholder*="Username"], input[type="text"]').first();
     this.passwordInput = page.locator('input[name="password"], input[placeholder*="Password"], input[type="password"]').first();
-    // The app uses "Sign in" (case may vary between environments)
     this.signInButton = page.getByRole('button', { name: /sign in/i });
     this.errorMessage = page.locator('.error, .Mui-error, [role="alert"]').first();
   }
@@ -24,7 +22,6 @@ class LoginPage extends BasePage {
 
   async login(username = 'admin', password = 'admin') {
     try {
-      // If already logged in (not on /login and no sign-in button), do nothing.
       const signInVisible = await this.signInButton.isVisible({ timeout: 1000 }).catch(() => false);
       const welcomeVisible = await this.page
         .getByText(constants.mainPageElements.welcomeText)
