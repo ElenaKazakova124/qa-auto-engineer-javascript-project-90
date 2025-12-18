@@ -7,6 +7,7 @@ class AppPage extends BasePage {
   }
 
   get signInButton() {
+    // "Sign in" label may differ in casing between environments
     return this.page.getByRole('button', { name: /sign in/i });
   }
 
@@ -27,7 +28,9 @@ class AppPage extends BasePage {
   }
 
   async waitForAppLoad(timeout = 15000) {
-    await Promise.race([
+    // IMPORTANT: Use Promise.any (not Promise.race). race rejects as soon as the first awaited
+    // promise rejects (e.g. a timeout), which can fail the wait even if other anchors could appear.
+    await Promise.any([
       this.signInButton.waitFor({ state: 'visible', timeout }),
       this.usernameField.waitFor({ state: 'visible', timeout }),
       this.welcomeText.waitFor({ state: 'visible', timeout }),
