@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import BasePage from './BasePage.js';
 import helpers from '../utils/helpers.js';
 
@@ -21,210 +22,86 @@ class LabelsPage extends BasePage {
   }
 
   async goto() {
-    try {
-      await this.page.goto('/#/labels', { 
-        waitUntil: 'domcontentloaded', 
-        timeout: 15000 
-      });
-      await helpers.waitForPageLoad(this.page);
-      await this.page.waitForLoadState('networkidle');
-    } catch (_error) {
-      try {
-        await this.page.locator('a:has-text("Labels")').first().click({ timeout: 15000 });
-        await helpers.waitForPageLoad(this.page);
-        await this.page.waitForLoadState('networkidle');
-      } catch (_e) {
-        throw new Error('Не удалось перейти на страницу меток');
-      }
-    }
+    await expect(this.labelsLink).toBeVisible({ timeout: 15000 });
+    await this.labelsLink.click();
+    await expect(this.createButton).toBeVisible({ timeout: 15000 });
   }
 
   async openCreateForm() {
-    await this.page.goto('/#/labels/create', { 
-      waitUntil: 'domcontentloaded', 
-      timeout: 15000 
-    });
-    await helpers.waitForPageLoad(this.page);
-    
-    await this.waitForElement(this.nameInput, 15000);
+    await this.goto();
+    await expect(this.createButton).toBeVisible({ timeout: 15000 });
+    await this.createButton.click();
+    await expect(this.nameInput).toBeVisible({ timeout: 15000 });
   }
 
   async createLabel(name = null) {
     const labelName = name || `Label${Date.now()}`;
-    
-    
-    try {
-      await this.openCreateForm();
-    } catch (_error) {
-      await this.goto();
-      await this.page.waitForLoadState('networkidle');
-      
-      if (await this.createButton.isVisible({ timeout: 5000 })) {
-        await this.createButton.click();
-        await helpers.waitForPageLoad(this.page);
-      } else {
-        throw error;
-      }
-    }
-    
+
+    await this.openCreateForm();
     await this.fill(this.nameInput, labelName);
-    
+    await expect(this.saveButton).toBeVisible({ timeout: 15000 });
     await this.click(this.saveButton);
-    
-    await helpers.waitForPageLoad(this.page);
-    await this.page.waitForLoadState('networkidle');
-    
+    await this.page.waitForLoadState('domcontentloaded');
     return labelName;
   }
 
   async editLabel(oldName, newName) {
-    await this.goto();
-    await this.page.waitForLoadState('domcontentloaded');
-    
-    
-    if (!await this.isLabelVisible(oldName, 10000)) {
-      await this.createLabel(oldName);
-      await this.page.waitForLoadState('domcontentloaded');
-      await this.goto();
-      await this.page.waitForLoadState('domcontentloaded');
-    }
-    
     const labelRow = this.page.locator('tbody tr').filter({ hasText: oldName }).first();
-    
-    if (await labelRow.isVisible({ timeout: 15000 })) {
-      
-      await labelRow.click({ force: true });
-      
-      await this.waitForElement(this.nameInput, 15000);
-      await this.page.waitForLoadState('domcontentloaded');
-      
-      await this.clear(this.nameInput);
-      await this.fill(this.nameInput, newName);
-      
-      await this.click(this.saveButton);
-      
-      await this.page.waitForResponse(response => {
-        return response.url().includes('/labels') && response.status() === 200;
-      }, { timeout: 10000 }).catch(() => null);
-      
-      await this.page.waitForLoadState('domcontentloaded');
-      
-      return newName;
-    } else {
-      return oldName;
-    }
+    await this.goto();
+    await expect(labelRow).toBeVisible({ timeout: 15000 });
+    await labelRow.click({ force: true });
+    await expect(this.nameInput).toBeVisible({ timeout: 15000 });
+    await this.clear(this.nameInput);
+    await this.fill(this.nameInput, newName);
+    await expect(this.saveButton).toBeVisible({ timeout: 15000 });
+    await this.click(this.saveButton);
+    await this.page.waitForLoadState('domcontentloaded');
+    return newName;
   }
 
   async deleteLabel(labelName) {
     await this.goto();
-    await this.page.waitForLoadState('networkidle');
-    
-    
-    if (!await this.isLabelVisible(labelName, 10000)) {
-      await this.createLabel(labelName);
-      await this.page.waitForLoadState('networkidle');
-      await this.goto();
-      await this.page.waitForLoadState('networkidle');
-    }
-    
     const labelRow = this.page.locator('tbody tr').filter({ hasText: labelName }).first();
-    
-    if (await labelRow.isVisible({ timeout: 15000 })) {
-      
-      const checkbox = labelRow.locator('td:first-child input[type="checkbox"]').first();
-      
-      if (await checkbox.isVisible({ timeout: 5000 })) {
-        
-        await checkbox.check({ force: true });
-        await this.page.waitForLoadState('networkidle');
-        
-        const bulkDeleteButton = this.page.locator('button:has-text("Delete"):visible').first();
-        
-        if (await bulkDeleteButton.isVisible({ timeout: 5000 })) {
-          
-          await bulkDeleteButton.click();
-          await this.page.waitForLoadState('networkidle');
-          
-          
-          try {
-            await this.waitForElement(this.snackbar, 10000);
-          } catch (_error) {
-          }
-          
-          try {
-            await labelRow.waitFor({ state: 'hidden', timeout: 5000 });
-          } catch (_error) {
-            await this.goto();
-            await this.page.waitForLoadState('networkidle');
-          }
-          
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
+    await expect(labelRow).toBeVisible({ timeout: 15000 });
+    const checkbox = labelRow.locator('td:first-child input[type="checkbox"]').first();
+    await expect(checkbox).toBeVisible({ timeout: 15000 });
+    await checkbox.check({ force: true });
+    const bulkDeleteButton = this.page.locator('button:has-text("Delete"):visible').first();
+    await expect(bulkDeleteButton).toBeVisible({ timeout: 15000 });
+    await bulkDeleteButton.click();
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(labelRow).toBeHidden({ timeout: 15000 });
+    return true;
   }
 
   async massDeleteLabels() {
     await this.goto();
-    await this.page.waitForLoadState('networkidle');
-    
-    
     const testLabels = [];
     for (let i = 1; i <= 3; i++) {
       const labelName = `TestLabel${i}_${Date.now()}`;
       await this.createLabel(labelName);
       testLabels.push(labelName);
-      await this.page.waitForLoadState('networkidle');
     }
-    
-    await this.page.waitForLoadState('networkidle');
     await this.goto();
-    await this.page.waitForLoadState('networkidle');
     
     for (const labelName of testLabels) {
       const labelRow = this.page.locator('tbody tr').filter({ hasText: labelName }).first();
-      if (await labelRow.isVisible({ timeout: 5000 })) {
-        const checkbox = labelRow.locator('td:first-child input[type="checkbox"]').first();
-        await checkbox.check({ force: true });
-        await this.page.waitForLoadState('networkidle');
-      }
+      await expect(labelRow).toBeVisible({ timeout: 15000 });
+      const checkbox = labelRow.locator('td:first-child input[type="checkbox"]').first();
+      await expect(checkbox).toBeVisible({ timeout: 15000 });
+      await checkbox.check({ force: true });
     }
     
     const bulkDeleteButton = this.page.locator('button:has-text("Delete"):visible').first();
-    
-    if (await bulkDeleteButton.isVisible({ timeout: 5000 })) {
-      
-      await bulkDeleteButton.click();
-      await this.page.waitForLoadState('networkidle');
-      
-      try {
-        await this.waitForElement(this.snackbar, 10000);
-      } catch (_error) {
-      }
-      
-      await this.page.waitForLoadState('networkidle');
-      
-      await this.goto();
-      await this.page.waitForLoadState('networkidle');
-      
-      let allDeleted = true;
-      for (const labelName of testLabels) {
-        const isStillVisible = await this.isLabelVisible(labelName);
-        if (isStillVisible) {
-          allDeleted = false;
-        }
-      }
-      
-      return allDeleted;
-    } else {
-      return false;
+    await expect(bulkDeleteButton).toBeVisible({ timeout: 15000 });
+    await bulkDeleteButton.click();
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.goto();
+    for (const labelName of testLabels) {
+      const row = this.page.locator('tbody tr').filter({ hasText: labelName }).first();
+      await expect(row).toBeHidden({ timeout: 15000 });
     }
+    return true;
   }
 
   async getLabelCount() {

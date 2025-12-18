@@ -6,42 +6,31 @@ class BasePage {
   }
 
   async waitForElement(selector, timeout = 15000) {
-    try {
-      if (typeof selector === 'string') {
-        await this.page.waitForSelector(selector, { state: 'visible', timeout });
-      } else {
-        await selector.waitFor({ state: 'visible', timeout });
-      }
-      return true;
-    } catch (_error) {
-      return false;
+    if (typeof selector === 'string') {
+      await this.page.waitForSelector(selector, { state: 'visible', timeout });
+      return;
     }
+    await selector.waitFor({ state: 'visible', timeout });
   }
 
   async click(selector, timeout = 15000) {
-    const isVisible = await this.waitForElement(selector, timeout);
-    if (!isVisible) {
-      throw new Error(`Element not visible for clicking: ${selector}`);
-    }
+    await this.waitForElement(selector, timeout);
     if (typeof selector === 'string') {
       await this.page.click(selector);
     } else {
       await selector.click();
     }
-    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async fill(selector, text, timeout = 15000) {
-    const isVisible = await this.waitForElement(selector, timeout);
-    if (!isVisible) {
-      throw new Error(`Element not visible for filling: ${selector}`);
-    }
+    await this.waitForElement(selector, timeout);
     if (typeof selector === 'string') {
       await this.page.fill(selector, text);
     } else {
       await selector.fill(text);
     }
-    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async navigateTo(url) {
@@ -50,10 +39,7 @@ class BasePage {
   }
 
   async getText(selector) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for getting text: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       return await this.page.textContent(selector);
     } else {
@@ -62,58 +48,44 @@ class BasePage {
   }
 
   async isElementVisible(selector, timeout = 5000) {
-    try {
-      await this.waitForElement(selector, timeout);
-      return true;
-    } catch {
-      return false;
+    if (typeof selector === 'string') {
+      return await this.page.locator(selector).first().isVisible({ timeout });
     }
+    return await selector.isVisible({ timeout });
   }
 
   async selectOption(selector, value) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for selecting option: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       await this.page.selectOption(selector, value);
     } else {
       await selector.selectOption(value);
     }
-    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async check(selector) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for checking: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       await this.page.check(selector);
     } else {
       await selector.check();
     }
-    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async uncheck(selector) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for unchecking: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       await this.page.uncheck(selector);
     } else {
       await selector.uncheck();
     }
-    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async getValue(selector) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for getting value: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       return await this.page.inputValue(selector);
     } else {
@@ -122,10 +94,7 @@ class BasePage {
   }
 
   async getAttribute(selector, attribute) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for getting attribute: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       return await this.page.getAttribute(selector, attribute);
     } else {
@@ -168,10 +137,7 @@ class BasePage {
   }
 
   async type(selector, text, options = {}) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for typing: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       await this.page.type(selector, text, options);
     } else {
@@ -180,10 +146,7 @@ class BasePage {
   }
 
   async clear(selector) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for clearing: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       await this.page.fill(selector, '');
     } else {
@@ -192,59 +155,44 @@ class BasePage {
   }
 
   async dragAndDrop(source, target) {
-    const isSourceVisible = await this.waitForElement(source);
-    const isTargetVisible = await this.waitForElement(target);
-    if (!isSourceVisible || !isTargetVisible) {
-      throw new Error('Source or target element not visible for drag and drop');
-    }
+    await this.waitForElement(source);
+    await this.waitForElement(target);
     await source.dragTo(target);
-    await this.page.waitForLoadState('networkidle').catch(() => null);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async hover(selector) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for hovering: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       await this.page.hover(selector);
     } else {
       await selector.hover();
     }
-    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async rightClick(selector) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for right clicking: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       await this.page.click(selector, { button: 'right' });
     } else {
       await selector.click({ button: 'right' });
     }
-    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async doubleClick(selector) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for double clicking: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       await this.page.dblclick(selector);
     } else {
       await selector.dblclick();
     }
-    await this.page.waitForLoadState('domcontentloaded').catch(() => null);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async focus(selector) {
-    const isVisible = await this.waitForElement(selector);
-    if (!isVisible) {
-      throw new Error(`Element not visible for focusing: ${selector}`);
-    }
+    await this.waitForElement(selector);
     if (typeof selector === 'string') {
       await this.page.focus(selector);
     } else {

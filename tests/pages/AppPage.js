@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import BasePage from './BasePage.js';
 import constants from '../utils/constants.js';
 
@@ -39,39 +40,32 @@ class AppPage extends BasePage {
   }
 
   async waitForAppLoad(timeout = 15000) {
-    try {
-      await Promise.any([
-        this.signInButton.waitFor({ state: 'visible', timeout }),
-        this.usernameField.waitFor({ state: 'visible', timeout }),
-        this.usernameText.waitFor({ state: 'visible', timeout }),
-        this.passwordText.waitFor({ state: 'visible', timeout }),
-        this.loginRequiredAlert.waitFor({ state: 'visible', timeout }),
-        this.welcomeText.waitFor({ state: 'visible', timeout }),
-        this.dashboardLink.waitFor({ state: 'visible', timeout }),
-        this.profileButton.waitFor({ state: 'visible', timeout }),
-        this.page.locator('body').waitFor({ state: 'attached', timeout }),
-        this.page.locator('#root').waitFor({ state: 'attached', timeout }),
-      ]);
-    } catch (_error) {
-      const url = this.page.url();
-      const title = await this.page.title().catch(() => '');
-      const bodyText = await this.page.textContent('body').catch(() => '');
-      const snippet = (bodyText || '').replace(/\s+/g, ' ').slice(0, 200);
-      throw new Error(`App did not reach a known stable UI state in ${timeout}ms. url="${url}" title="${title}" bodySnippet="${snippet}"`);
-    }
+    await Promise.any([
+      expect(this.signInButton).toBeVisible({ timeout }),
+      expect(this.usernameField).toBeVisible({ timeout }),
+      expect(this.usernameText).toBeVisible({ timeout }),
+      expect(this.passwordText).toBeVisible({ timeout }),
+      expect(this.loginRequiredAlert).toBeVisible({ timeout }),
+      expect(this.welcomeText).toBeVisible({ timeout }),
+      expect(this.dashboardLink).toBeVisible({ timeout }),
+      expect(this.profileButton).toBeVisible({ timeout }),
+      expect(this.page.locator('body')).toBeAttached({ timeout }),
+      expect(this.page.locator('#root')).toBeAttached({ timeout }),
+    ]);
   }
 
   async isAppLoaded() {
-    return (
-      await this.signInButton.isVisible().catch(() => false) ||
-      await this.usernameField.isVisible().catch(() => false) ||
-      await this.usernameText.isVisible().catch(() => false) ||
-      await this.passwordText.isVisible().catch(() => false) ||
-      await this.loginRequiredAlert.isVisible().catch(() => false) ||
-      await this.welcomeText.isVisible().catch(() => false) ||
-      await this.dashboardLink.isVisible().catch(() => false) ||
-      await this.profileButton.isVisible().catch(() => false)
-    );
+    await Promise.any([
+      expect(this.signInButton).toBeVisible({ timeout: 15000 }),
+      expect(this.usernameField).toBeVisible({ timeout: 15000 }),
+      expect(this.usernameText).toBeVisible({ timeout: 15000 }),
+      expect(this.passwordText).toBeVisible({ timeout: 15000 }),
+      expect(this.loginRequiredAlert).toBeVisible({ timeout: 15000 }),
+      expect(this.welcomeText).toBeVisible({ timeout: 15000 }),
+      expect(this.dashboardLink).toBeVisible({ timeout: 15000 }),
+      expect(this.profileButton).toBeVisible({ timeout: 15000 }),
+    ]);
+    return true;
   }
 }
 

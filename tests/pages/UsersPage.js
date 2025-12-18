@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import BasePage from './BasePage.js';
 import helpers from '../utils/helpers.js';
 
@@ -20,31 +21,18 @@ class UsersPage extends BasePage {
   }
 
   async goto() {
-    try {
-      await this.page.goto('/#/users', { 
-        waitUntil: 'domcontentloaded', 
-        timeout: 15000 
-      });
-      await helpers.waitForPageLoad(this.page);
-    } catch (_error) {
-      try {
-        await this.page.locator('a:has-text("Users")').first().click({ timeout: 15000 });
-        await helpers.waitForPageLoad(this.page);
-      } catch (_e) {
-        throw new Error('Не удалось перейти на страницу пользователей');
-      }
-    }
+    await expect(this.usersLink).toBeVisible({ timeout: 15000 });
+    await this.usersLink.click();
+    await expect(this.createButton).toBeVisible({ timeout: 15000 });
   }
 
   async openCreateForm() {
-    await this.page.goto('/#/users/create', { 
-      waitUntil: 'domcontentloaded', 
-      timeout: 15000 
-    });
-    await helpers.waitForPageLoad(this.page);
-    await this.waitForElement(this.emailInput, 15000);
-    await this.waitForElement(this.firstNameInput, 15000);
-    await this.waitForElement(this.lastNameInput, 15000);
+    await this.goto();
+    await expect(this.createButton).toBeVisible({ timeout: 15000 });
+    await this.createButton.click();
+    await expect(this.emailInput).toBeVisible({ timeout: 15000 });
+    await expect(this.firstNameInput).toBeVisible({ timeout: 15000 });
+    await expect(this.lastNameInput).toBeVisible({ timeout: 15000 });
   }
 
   async createUser(email = null, firstName = null, lastName = null) {
@@ -52,171 +40,67 @@ class UsersPage extends BasePage {
     const userFirstName = firstName || `FirstName${Date.now()}`;
     const userLastName = lastName || `LastName${Date.now()}`;
     
-    try {
-      await this.openCreateForm();
-    } catch (_error) {
-      await this.goto();
-      await this.page.waitForLoadState('networkidle');
-      
-      if (await this.createButton.isVisible({ timeout: 5000 })) {
-        await this.createButton.click();
-        await helpers.waitForPageLoad(this.page);
-        await this.waitForElement(this.emailInput, 15000);
-        await this.waitForElement(this.firstNameInput, 15000);
-        await this.waitForElement(this.lastNameInput, 15000);
-      } else {
-        throw error;
-      }
-    }
-    
+    await this.openCreateForm();
     await this.fill(this.emailInput, userEmail);
     await this.fill(this.firstNameInput, userFirstName);
     await this.fill(this.lastNameInput, userLastName);
+    await expect(this.saveButton).toBeVisible({ timeout: 15000 });
     await this.click(this.saveButton);
-    await helpers.waitForPageLoad(this.page);
+    await this.page.waitForLoadState('domcontentloaded');
     
     return { email: userEmail, firstName: userFirstName, lastName: userLastName };
   }
 
   async editUser(oldEmail, newData) {
-    await this.goto();
-    await this.page.waitForLoadState('domcontentloaded');
-    
-    if (!await this.isUserVisible(oldEmail, 10000)) {
-      const firstName = `FirstName${Date.now()}`;
-      const lastName = `LastName${Date.now()}`;
-      await this.createUser(oldEmail, firstName, lastName);
-      await this.page.waitForLoadState('domcontentloaded');
-      await this.goto();
-    }
-    
     const userRow = this.page.locator('tbody tr').filter({ hasText: oldEmail }).first();
-    
-    if (await userRow.isVisible({ timeout: 15000 })) {
-      await userRow.click({ force: true });
-      await this.waitForElement(this.emailInput, 15000);
-      await this.waitForElement(this.firstNameInput, 15000);
-      await this.waitForElement(this.lastNameInput, 15000);
-    
-      if (newData.email) {
-        await this.clear(this.emailInput);
-        await this.fill(this.emailInput, newData.email);
-      }
-      
-      if (newData.firstName) {
-        await this.clear(this.firstNameInput);
-        await this.fill(this.firstNameInput, newData.firstName);
-      }
-      
-      if (newData.lastName) {
-        await this.clear(this.lastNameInput);
-        await this.fill(this.lastNameInput, newData.lastName);
-      }
-      
-      await this.click(this.saveButton);
-      
-      await this.page.waitForResponse(response => {
-        return response.url().includes('/users') && response.status() === 200;
-      }, { timeout: 10000 }).catch(() => null);
-      
-      await this.page.waitForLoadState('domcontentloaded');
-      
-      return newData;
-    } else {
-      return { email: oldEmail }; 
+    await this.goto();
+    await expect(userRow).toBeVisible({ timeout: 15000 });
+    await userRow.click({ force: true });
+    await expect(this.emailInput).toBeVisible({ timeout: 15000 });
+    await expect(this.firstNameInput).toBeVisible({ timeout: 15000 });
+    await expect(this.lastNameInput).toBeVisible({ timeout: 15000 });
+    if (newData.email !== undefined && newData.email !== null) {
+      await this.clear(this.emailInput);
+      await this.fill(this.emailInput, newData.email);
     }
+    if (newData.firstName !== undefined && newData.firstName !== null) {
+      await this.clear(this.firstNameInput);
+      await this.fill(this.firstNameInput, newData.firstName);
+    }
+    if (newData.lastName !== undefined && newData.lastName !== null) {
+      await this.clear(this.lastNameInput);
+      await this.fill(this.lastNameInput, newData.lastName);
+    }
+    await expect(this.saveButton).toBeVisible({ timeout: 15000 });
+    await this.click(this.saveButton);
+    await this.page.waitForLoadState('domcontentloaded');
+    return newData;
   }
 
   async deleteUser(email) {
     await this.goto();
-    await this.page.waitForLoadState('networkidle');
-    
-    if (!await this.isUserVisible(email, 10000)) {
-      const firstName = `FirstName${Date.now()}`;
-      const lastName = `LastName${Date.now()}`;
-      await this.createUser(email, firstName, lastName);
-      await this.page.waitForLoadState('networkidle');
-      await this.goto();
-    }
-    
     const userRow = this.page.locator('tbody tr').filter({ hasText: email }).first();
-    
-    if (await userRow.isVisible({ timeout: 15000 })) {
-      const checkbox = userRow.locator('td:first-child input[type="checkbox"]').first();
-      
-      if (await checkbox.isVisible({ timeout: 5000 })) {
-        await checkbox.check({ force: true });
-        await this.page.waitForLoadState('networkidle');
-        
-        const bulkDeleteButton = this.page.locator('button:has-text("Delete"):visible').first();
-        
-        if (await bulkDeleteButton.isVisible({ timeout: 5000 })) {
-          await bulkDeleteButton.click();
-          await this.page.waitForLoadState('networkidle');
-          
-          try {
-            await this.waitForElement(this.snackbar, 10000);
-          } catch (_error) {
-          }
-          
-          try {
-            await userRow.waitFor({ state: 'hidden', timeout: 5000 });
-          } catch (_error) {
-            await this.goto();
-          }
-          
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
+    await expect(userRow).toBeVisible({ timeout: 15000 });
+    const checkbox = userRow.locator('td:first-child input[type="checkbox"]').first();
+    await expect(checkbox).toBeVisible({ timeout: 15000 });
+    await checkbox.check({ force: true });
+    const bulkDeleteButton = this.page.locator('button:has-text("Delete"):visible').first();
+    await expect(bulkDeleteButton).toBeVisible({ timeout: 15000 });
+    await bulkDeleteButton.click();
+    await this.page.waitForLoadState('domcontentloaded');
+    await expect(userRow).toBeHidden({ timeout: 15000 });
+    return true;
   }
 
   async massDeleteUsers() {
     await this.goto();
-    await this.page.waitForLoadState('networkidle');
-    
-    const initialCount = await this.getUserCount();
-    
-    if (initialCount === 0) {
-      return true;
-    }
-    
-    if (await this.selectAllCheckbox.isVisible({ timeout: 5000 })) {
-      await this.selectAllCheckbox.check({ force: true });
-      await this.page.waitForLoadState('networkidle');
-      
-      const bulkDeleteButton = this.page.locator('button:has-text("Delete"):visible').first();
-      
-      if (await bulkDeleteButton.isVisible({ timeout: 5000 })) {
-        await bulkDeleteButton.click();
-        await this.page.waitForLoadState('networkidle');
-        
-        try {
-          await this.waitForElement(this.snackbar, 10000);
-        } catch (_error) {
-        }
-        
-        await this.goto();
-        
-        const finalCount = await this.getUserCount();
-        
-        if (finalCount < initialCount) {
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
+    await expect(this.selectAllCheckbox).toBeVisible({ timeout: 15000 });
+    await this.selectAllCheckbox.check({ force: true });
+    const bulkDeleteButton = this.page.locator('button:has-text("Delete"):visible').first();
+    await expect(bulkDeleteButton).toBeVisible({ timeout: 15000 });
+    await bulkDeleteButton.click();
+    await this.page.waitForLoadState('domcontentloaded');
+    return true;
   }
 
   async getUserCount() {

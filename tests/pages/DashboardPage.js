@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import BasePage from './BasePage.js';
 import constants from '../utils/constants.js';
 
@@ -10,25 +11,16 @@ class DashboardPage extends BasePage {
   }
 
   async waitForDashboard() {
-    await this.waitForElement(this.dashboardLink);
+    await expect(this.dashboardLink).toBeVisible({ timeout: 15000 });
   }
 
   async logout() {
-    try {
-      await this.profileButton.click();
-      await this.page.waitForLoadState('networkidle');
-      await this.logoutButton.click({ force: true });
-      await this.page.waitForURL('**/login', { timeout: 10000 });
-      return true;
-    } catch (_) {
-      await this.page.evaluate(() => {
-        localStorage.clear();
-        sessionStorage.clear();
-      });
-      
-      await this.page.goto('/login');
-      return true;
-    }
+    await expect(this.profileButton).toBeVisible({ timeout: 15000 });
+    await this.profileButton.click();
+    await expect(this.logoutButton).toBeVisible({ timeout: 15000 });
+    await this.logoutButton.click({ force: true });
+    await this.page.waitForURL('**/login', { timeout: 15000 });
+    return true;
   }
 }
 
