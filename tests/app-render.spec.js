@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AppPage from './pages/AppPage.js';
 import LoginPage from './pages/LoginPage.js';
-import constants from './utils/constants.js';
 
 test('приложение загружается', async ({ page }) => {
   const app = new AppPage(page);
