@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test';
 import BasePage from './BasePage.js';
-import helpers from '../utils/helpers.js';
 
 class StatusesPage extends BasePage {
   constructor(page) {

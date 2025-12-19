@@ -46,14 +46,6 @@ test('отображаются основные элементы меню нав
   await loginPage.login('admin', 'admin');
   await page.waitForLoadState('domcontentloaded');
 
-  const menuItems = [
-    constants.mainPageElements.dashboardMenuItemLabel,
-    constants.mainPageElements.tasksMenuItemLabel,
-    constants.mainPageElements.usersMenuItemLabel,
-    constants.mainPageElements.labelsMenuItemLabel,
-    constants.mainPageElements.statusesMenuItemLabel
-  ];
-
   await expect(page.locator('body')).toBeAttached();
 });
 
